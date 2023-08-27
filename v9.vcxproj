@@ -113,7 +113,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)/libraries/tinyobjloader-release;$(SolutionDir)/libraries/stb/stb-master;$(SolutionDir)/libraries/vulkan/include;$(SolutionDir)/libraries/glfw/include;$(SolutionDir)/libraries/glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)/libraries/tinyobjloader-release;$(SolutionDir)/libraries/stb-master;$(SolutionDir)/libraries/vulkan;$(SolutionDir)/libraries/glfw/include;$(SolutionDir)/libraries/glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -143,12 +143,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DebugMessenger.cpp" />
+    <ClCompile Include="Instance.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="compile.bat" />
     <None Include="shader.frag" />
     <None Include="shader.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DebugMessenger.h" />
+    <ClInclude Include="Instance.h" />
+    <ClInclude Include="vulkanConfig.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
