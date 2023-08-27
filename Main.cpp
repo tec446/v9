@@ -31,6 +31,7 @@
 #include "vulkanConfig.h"
 #include "Instance.h"
 #include "DebugMessenger.h"
+#include "Surface.h"
 
 const uint32_t WIDTH{ 800 };
 const uint32_t HEIGHT{ 600 };
@@ -43,12 +44,6 @@ const std::string TEXTURE_PATH = "viking_room.png";
 const std::vector<const char*> deviceExtensions = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
-
-
-
-
-
-
 
 struct QueueFamilyIndices {
 	std::optional<uint32_t> graphicsFamily;
@@ -163,11 +158,11 @@ private:
 	// Wrappers
 	Instance	   m_instance{};
 	DebugMessenger m_debugMessenger{};
+	Surface        m_surface{};
 	// Wrappers
 
 	GLFWwindow* window{};
 
-	VkSurfaceKHR surface;
 
 	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 	VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
@@ -245,8 +240,9 @@ private:
 	void initVulkan() {
 		m_instance.createInstance(m_debugMessenger);	   // create the instance
 		m_debugMessenger.setupDebugMessenger(*m_instance); // setup the debug messenger
+		m_surface.createSurface(*m_instance, window);	   // create the surface
 
-		createSurface();
+
 		pickPhysicalDevice();
 		createLogicalDevice();
 		createSwapChain();
@@ -349,7 +345,7 @@ private:
 			m_debugMessenger.DestroyDebugUtilsMessengerEXT(*m_instance, *m_debugMessenger, nullptr);
 		}
 
-		vkDestroySurfaceKHR(*m_instance, surface, nullptr);
+		vkDestroySurfaceKHR(*m_instance, *m_surface, nullptr);
 		vkDestroyInstance(*m_instance, nullptr);
 
 		glfwDestroyWindow(window);
@@ -378,14 +374,6 @@ private:
 		createColorResources();
 		createDepthResources();
 		createFramebuffers();
-	}
-
-	void createSurface()
-	{
-		if (glfwCreateWindowSurface(*m_instance, window, nullptr, &surface) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create window surface!");
-		}
 	}
 
 	void pickPhysicalDevice()
@@ -481,7 +469,7 @@ private:
 
 		VkSwapchainCreateInfoKHR createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-		createInfo.surface = surface;
+		createInfo.surface = *m_surface;
 		createInfo.minImageCount = imageCount;
 		createInfo.imageFormat = surfaceFormat.format;
 		createInfo.imageColorSpace = surfaceFormat.colorSpace;
@@ -1694,22 +1682,22 @@ return shaderModule;
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) {
 		SwapChainSupportDetails details;
 		
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, *m_surface, &details.capabilities);
 
 		uint32_t formatCount;
-		vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(device, *m_surface, &formatCount, nullptr);
 
 		if (formatCount != 0) {
 			details.formats.resize(formatCount);
-			vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
+			vkGetPhysicalDeviceSurfaceFormatsKHR(device, *m_surface, &formatCount, details.formats.data());
 		}
 
 		uint32_t presentModeCount;
-		vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
+		vkGetPhysicalDeviceSurfacePresentModesKHR(device, *m_surface, &presentModeCount, nullptr);
 
 		if (presentModeCount != 0) {
 			details.presentModes.resize(presentModeCount);
-			vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data());
+			vkGetPhysicalDeviceSurfacePresentModesKHR(device, *m_surface, &presentModeCount, details.presentModes.data());
 		}
 
 		return details;
@@ -1763,7 +1751,7 @@ return shaderModule;
 		int i = 0;
 		VkBool32 presentSupport = false;
 		for (const auto& queueFamily : queueFamilies) {
-			vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+			vkGetPhysicalDeviceSurfaceSupportKHR(device, i, *m_surface, &presentSupport);
 			if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
 				indices.graphicsFamily = i;
 			}

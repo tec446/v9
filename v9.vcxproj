@@ -146,6 +146,7 @@
     <ClCompile Include="DebugMessenger.cpp" />
     <ClCompile Include="Instance.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Surface.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="compile.bat" />
@@ -155,6 +156,7 @@
   <ItemGroup>
     <ClInclude Include="DebugMessenger.h" />
     <ClInclude Include="Instance.h" />
+    <ClInclude Include="Surface.h" />
     <ClInclude Include="vulkanConfig.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
