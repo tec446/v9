@@ -84,6 +84,3 @@ std::vector<const char*> Instance::getRequiredExtensions() {
 	return extensions;
 } // getRequiredExtensions()
 
-// Returns a reference to the instance
-// Allows Instance to be used as a wrapper for VkInstance
-VkInstance& Instance::operator*() { return(m_instance); } // operator * override

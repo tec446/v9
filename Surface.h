@@ -4,12 +4,16 @@
 #include <GLFW/glfw3.h>
 #include <stdexcept>
 
+#include "Instance.h"
+#include "Window.h"
+
 class Surface
 {
 public:
-	void createSurface(VkInstance& instance, GLFWwindow* window);
+	void createSurface(Instance& instance, Window& window);
 
 	VkSurfaceKHR m_surface{};
 
-	VkSurfaceKHR& operator*();
+	// Allows us to use the class like a pointer
+	VkSurfaceKHR& operator*() { return m_surface; }
 }; // class Surface

@@ -143,10 +143,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CommandPool.cpp" />
     <ClCompile Include="DebugMessenger.cpp" />
+    <ClCompile Include="DescriptorSet.cpp" />
+    <ClCompile Include="GraphicsPipeline.cpp" />
+    <ClCompile Include="HelloTriangleApplication.cpp" />
     <ClCompile Include="Instance.cpp" />
+    <ClCompile Include="IO.cpp" />
+    <ClCompile Include="LogicalDevice.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="ModelLoader.cpp" />
+    <ClCompile Include="PhysicalDevice.cpp" />
+    <ClCompile Include="RenderPass.cpp" />
     <ClCompile Include="Surface.cpp" />
+    <ClCompile Include="SwapChain.cpp" />
+    <ClCompile Include="SyncObjects.cpp" />
+    <ClCompile Include="TextureImage.cpp" />
+    <ClCompile Include="TextureSampler.cpp" />
+    <ClCompile Include="UniformBuffers.cpp" />
+    <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="compile.bat" />
@@ -154,10 +169,25 @@
     <None Include="shader.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CommandPool.h" />
     <ClInclude Include="DebugMessenger.h" />
+    <ClInclude Include="DescriptorSet.h" />
+    <ClInclude Include="GraphicsPipeline.h" />
+    <ClInclude Include="HelloTriangleApplication.h" />
     <ClInclude Include="Instance.h" />
+    <ClInclude Include="IO.h" />
+    <ClInclude Include="LogicalDevice.h" />
+    <ClInclude Include="ModelLoader.h" />
+    <ClInclude Include="PhysicalDevice.h" />
+    <ClInclude Include="RenderPass.h" />
     <ClInclude Include="Surface.h" />
+    <ClInclude Include="SwapChain.h" />
+    <ClInclude Include="SyncObjects.h" />
+    <ClInclude Include="TextureImage.h" />
+    <ClInclude Include="TextureSampler.h" />
+    <ClInclude Include="UniformBuffers.h" />
     <ClInclude Include="vulkanConfig.h" />
+    <ClInclude Include="Window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

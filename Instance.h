@@ -24,7 +24,9 @@ public:
 
 	const std::vector<const char*> m_validationLayers = { "VK_LAYER_KHRONOS_validation" };
 	
-	VkInstance& operator*();
+	// Allows us to use the class like a pointer
+	VkInstance& operator*() { return(m_instance); } // operator * override
+
 
 	// operator * override
 }; // class Instance
