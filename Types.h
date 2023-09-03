@@ -2,7 +2,11 @@
 
 #include <vulkan/vulkan.h>
 #include <vector>
+#include <array>
+#include <optional>
 #include <glm/fwd.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtx/hash.hpp>
 
 struct SwapChainSupportDetails
 {

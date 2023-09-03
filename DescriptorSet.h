@@ -21,6 +21,7 @@ public:
 	void createDescriptorPool(VkDevice&);
 
 	// Allows us to use DescriptorSet as a pointer
-	auto operator*() -> VkDescriptorSetLayout& { return m_descriptorSetLayout; }
+	auto operator*()		   -> std::vector<VkDescriptorSet>& { return m_descriptorSets; }
+	auto operator[](int index) -> VkDescriptorSet&				{ return m_descriptorSets[index]; }
 
 }; // class DescriptorSet

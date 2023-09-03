@@ -39,9 +39,9 @@ public:
 	void createImage(PhysicalDevice& physicalDevice, LogicalDevice& logicalDevice, uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 	void createFramebuffers(LogicalDevice& logicalDevice, VkRenderPass& renderPass);
 	
-	static auto findDepthFormat(PhysicalDevice& physicalDevice) -> VkFormat;
 	static auto findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features, PhysicalDevice& physicalDevice) -> VkFormat;
 	static auto findMemoryType(PhysicalDevice& physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties) -> uint32_t;
+	static auto findDepthFormat(PhysicalDevice& physicalDevice) -> VkFormat;
 
 	
 	void cleanupSwapChain(VkDevice logicalDevice);

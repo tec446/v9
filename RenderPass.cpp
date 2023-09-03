@@ -4,8 +4,8 @@ void RenderPass::createRenderPass
 (
 	PhysicalDevice& physicalDevice, 
 	VkDevice& logicalDevice, 
-	VkFormat& swapChainImageFormat,
-	VkFormat& swapChainDepthFormat,
+	VkFormat swapChainImageFormat,
+	VkFormat swapChainDepthFormat,
 	RenderPass& renderPass
 )
 {

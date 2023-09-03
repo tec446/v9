@@ -1,5 +1,6 @@
 #pragma once 
 
+/*
 #define GLFW_INCLUDE_VULKAN
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -28,6 +29,9 @@
 #include <cstdint>
 #include <limits>
 #include <algorithm>
+*/
+
+#include <iostream>
 
 #include "vulkanConfig.h"
 #include "Instance.h"
@@ -72,7 +76,6 @@ private:
 	GraphicsPipeline m_graphicsPipeline{};
 	CommandPool      m_commandPool{};
 	TextureImage	 m_textureImage{};
-	ModelLoader		 m_modelLoader{};
 	UniformBuffers   m_uniformBuffers{};
 	SyncObjects      m_syncObjects{};
 	// Wrappers
@@ -81,29 +84,29 @@ private:
 
 	void initVulkan() {
 		m_instance.createInstance(m_debugMessenger);
-		m_debugMessenger.setupDebugMessenger(m_instance);
-		m_surface.createSurface(m_instance, m_window);
-		m_physicalDevice.pickPhysicalDevice(m_instance, m_swapChain, m_surface);
-		m_logicalDevice.createLogicalDevice(m_physicalDevice, m_instance, m_surface);
-		m_swapChain.createSwapChain(m_physicalDevice, m_logicalDevice, m_surface, m_window);
+		m_debugMessenger.setupDebugMessenger(*m_instance);
+		m_surface.createSurface(*m_instance, **m_window);
+		m_physicalDevice.pickPhysicalDevice(*m_instance, *m_surface);
+		m_logicalDevice.createLogicalDevice(m_physicalDevice, m_instance.m_validationLayers, *m_surface);
+		m_swapChain.createSwapChain(m_physicalDevice, m_logicalDevice, *m_surface, **m_window);
 		m_swapChain.createImageViews(m_logicalDevice);
-		m_renderPass.createRenderPass(m_physicalDevice, m_logicalDevice, m_swapChain, m_renderPass);
-		m_descriptorSets.createDescriptorSetLayout(m_logicalDevice);
-		m_graphicsPipeline.createGraphicsPipeline(m_physicalDevice, m_logicalDevice, m_descriptorSets, m_renderPass);
-		m_commandPool.createCommandPool(m_physicalDevice, m_logicalDevice, m_surface);
+		m_renderPass.createRenderPass(m_physicalDevice, *m_logicalDevice, m_swapChain.m_swapChainImageFormat, SwapChain::findDepthFormat(m_physicalDevice),	m_renderPass);
+		m_descriptorSets.createDescriptorSetLayout(*m_logicalDevice);
+		m_graphicsPipeline.createGraphicsPipeline(m_physicalDevice, m_logicalDevice, m_descriptorSets.m_descriptorSetLayout, *m_renderPass);
+		m_commandPool.createCommandPool(m_physicalDevice, m_logicalDevice, *m_surface);
 		m_swapChain.createColorResources(m_physicalDevice, m_logicalDevice, m_swapChain);
 		m_swapChain.createDepthResources(m_physicalDevice, m_logicalDevice, m_swapChain);
-		m_swapChain.createFramebuffers(m_logicalDevice, m_renderPass);
-		m_textureImage.createTextureImage(m_physicalDevice, m_logicalDevice, m_commandPool, m_swapChain, m_modelLoader);
-		m_textureImage.createTextureSampler(m_physicalDevice, m_logicalDevice, m_textureImage);
-		m_modelLoader.loadModel(m_commandPool);
+		m_swapChain.createFramebuffers(m_logicalDevice, *m_renderPass);
+		m_textureImage.createTextureImage(m_physicalDevice, m_logicalDevice, m_commandPool, m_swapChain);
+		m_textureImage.createTextureSampler(m_physicalDevice, m_logicalDevice);
+		ModelLoader::loadModel(m_commandPool.m_vertices, m_commandPool.m_indices);
 		m_uniformBuffers.createVertexBuffer(m_physicalDevice, m_logicalDevice, m_commandPool);
 		m_uniformBuffers.createIndexBuffer(m_physicalDevice, m_logicalDevice, m_commandPool);
-		m_uniformBuffers.createUniformBuffers(m_physicalDevice, m_logicalDevice, m_descriptorSets);
-		m_descriptorSets.createDescriptorPool(m_logicalDevice);
-		m_descriptorSets.createDescriptorSets(m_logicalDevice, m_uniformBuffers, m_textureImage);
-		m_commandPool.createCommandBuffers(m_logicalDevice, m_descriptorSets);
-		m_syncObjects.createSyncObjects(*m_logicalDevice, m_commandPool, m_descriptorSets);
+		m_uniformBuffers.createUniformBuffers(m_physicalDevice, m_logicalDevice, m_descriptorSets.MAX_FRAMES_IN_FLIGHT);
+		m_descriptorSets.createDescriptorPool(*m_logicalDevice);
+		m_descriptorSets.createDescriptorSets(*m_logicalDevice, *m_uniformBuffers, m_textureImage.m_textureImageView, m_textureImage.m_textureSampler);
+		m_commandPool.createCommandBuffers(m_logicalDevice, m_descriptorSets.MAX_FRAMES_IN_FLIGHT);
+		m_syncObjects.createSyncObjects(*m_logicalDevice, m_commandPool.m_imageAvailableSemaphores, m_commandPool.m_renderFinishedSemaphores, m_commandPool.m_inFlightFences, m_descriptorSets.MAX_FRAMES_IN_FLIGHT);
 
 	} // initVulkan()
 
@@ -160,7 +163,7 @@ private:
 
 		if (enableValidationLayers)
 		{
-			m_debugMessenger.DestroyDebugUtilsMessengerEXT(m_instance, *m_debugMessenger, nullptr);
+			m_debugMessenger.DestroyDebugUtilsMessengerEXT(*m_instance, *m_debugMessenger, nullptr);
 		}
 
 		vkDestroySurfaceKHR(*m_instance, *m_surface, nullptr);
@@ -182,7 +185,7 @@ private:
 			m_commandPool.m_imageAvailableSemaphores[m_commandPool.m_currentFrame], VK_NULL_HANDLE, &imageIndex);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-			m_swapChain.recreateSwapChain(m_window, m_physicalDevice, m_logicalDevice, m_surface, m_renderPass, m_swapChain);
+			m_swapChain.recreateSwapChain(**m_window, m_physicalDevice, m_logicalDevice, *m_surface, *m_renderPass, m_swapChain);
 			return;
 		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 			throw std::runtime_error("failed to acquire swap chain image!");
@@ -194,7 +197,7 @@ private:
 		m_uniformBuffers.vkUpdateUniformBuffer(m_swapChain, m_commandPool.m_currentFrame);
 
 		vkResetCommandBuffer(m_commandPool.m_commandBuffers[m_commandPool.m_currentFrame], 0);
-		m_commandPool.recordCommandBuffer(m_commandPool.m_commandBuffers[m_commandPool.m_currentFrame], imageIndex, m_renderPass, m_swapChain, m_graphicsPipeline, m_descriptorSets);
+		m_commandPool.recordCommandBuffer(m_commandPool.m_commandBuffers[m_commandPool.m_currentFrame],*m_descriptorSets,*m_graphicsPipeline,m_graphicsPipeline.m_pipelineLayout,*m_renderPass,imageIndex,m_swapChain.m_swapChainFramebuffers,m_swapChain.m_swapChainExtent);
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -227,7 +230,7 @@ private:
 		result = vkQueuePresentKHR(m_logicalDevice.m_presentQueue, &presentInfo);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
 			framebufferResized = false;
-			m_swapChain.recreateSwapChain(m_window, m_physicalDevice, m_logicalDevice, m_surface, m_renderPass, m_swapChain);
+			m_swapChain.recreateSwapChain(**m_window, m_physicalDevice, m_logicalDevice, *m_surface, *m_renderPass, m_swapChain);
 		} else if (result != VK_SUCCESS) {
 			throw std::runtime_error("failed to present swap chain image");
 		}

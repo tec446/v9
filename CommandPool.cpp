@@ -1,9 +1,9 @@
 #include "CommandPool.h"
 
 
-void CommandPool::createCommandPool(PhysicalDevice& physicalDevice, LogicalDevice& logicalDevice, Surface& surface)
+void CommandPool::createCommandPool(PhysicalDevice& physicalDevice, LogicalDevice& logicalDevice, VkSurfaceKHR& surface)
 {
-	PhysicalDevice::QueueFamilyIndices queueFamilyIndices = physicalDevice.findQueueFamilies(*physicalDevice, surface);
+	QueueFamilyIndices queueFamilyIndices = physicalDevice.findQueueFamilies(*physicalDevice, surface);
 
 	VkCommandPoolCreateInfo poolInfo{};
 	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -36,10 +36,9 @@ void CommandPool::recordCommandBuffer
 	std::vector<VkDescriptorSet>& descriptorSets,
 	VkPipeline&	graphicsPipeline,
 	VkPipelineLayout& graphicsPipelineLayout,
-	uint32_t imageIndex, 
 	VkRenderPass& renderPass, 
-	std::vector<VkFramebuffer>& 
-	frameBuffers, 
+	uint32_t imageIndex, 
+	std::vector<VkFramebuffer>& frameBuffers, 
 	VkExtent2D extent2d
 )
 {

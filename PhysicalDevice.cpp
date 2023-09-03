@@ -59,7 +59,7 @@ auto PhysicalDevice::findQueueFamilies(VkPhysicalDevice& device, VkSurfaceKHR& s
 	int i = 0;
 	VkBool32 presentSupport = false;
 	for (const auto& queueFamily : queueFamilies) {
-		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, *surface, &presentSupport);
+		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
 		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
 			indices.graphicsFamily = i;
 		}

@@ -9,7 +9,6 @@ public:
 	const uint32_t HEIGHT{ 600 };
 
 	GLFWwindow* m_window{};
-
 	
 	void initWindow();
 

@@ -26,6 +26,7 @@ public:
 	void vkUpdateUniformBuffer(SwapChain& swapChain, uint32_t currentImage);
 
 	// Allows us to use UniformBuffers as a pointer
-	auto operator[](int i) -> VkBuffer& { return m_uniformBuffers[i]; }
+	auto operator*()       -> std::vector<VkBuffer>& { return m_uniformBuffers; }
+	auto operator[](int i) -> VkBuffer&				 { return m_uniformBuffers[i]; }
 
 }; // class UniformBuffers

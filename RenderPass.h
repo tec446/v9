@@ -10,7 +10,14 @@ class RenderPass
 public:
 	VkRenderPass m_renderPass;
 
-	void createRenderPass(PhysicalDevice& physicalDevice, VkDevice& logicalDevice, VkFormat& swapChainImageFormat, VkFormat& swapChainDepthFormat, RenderPass& renderPass);
+	void createRenderPass
+	(
+		PhysicalDevice& physicalDevice, 
+		VkDevice& logicalDevice, 
+		VkFormat swapChainImageFormat, 
+		VkFormat swapChainDepthFormat, 
+		RenderPass& renderPass
+	);
 
 	// Allows us to use the class like a pointer
 	auto operator*() -> VkRenderPass& { return m_renderPass; }
