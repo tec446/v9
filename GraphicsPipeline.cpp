@@ -1,10 +1,9 @@
 #include "GraphicsPipeline.h"
 
-
-void GraphicsPipeline::createGraphicsPipeline(PhysicalDevice& physicalDevice, LogicalDevice& logicalDevice, DescriptorSet& descriptorSet, RenderPass& renderPass)
+void GraphicsPipeline::createGraphicsPipeline(PhysicalDevice& physicalDevice, LogicalDevice& logicalDevice, VkDescriptorSetLayout& descriptorSetLayout, VkRenderPass& renderPass)
 {
-	auto vertShaderCode = IO::readFile("vert.spv");
-	auto fragShaderCode = IO::readFile("frag.spv");
+	auto vertShaderCode = IO::readFile(TempMagicValues::VERT_SHADER_PATH);
+	auto fragShaderCode = IO::readFile(TempMagicValues::FRAG_SHADER_PATH);
 
 	VkShaderModule vertShaderModule = createShaderModule(vertShaderCode, logicalDevice);
 	VkShaderModule fragShaderModule = createShaderModule(fragShaderCode, logicalDevice);
@@ -95,7 +94,7 @@ void GraphicsPipeline::createGraphicsPipeline(PhysicalDevice& physicalDevice, Lo
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipelineLayoutInfo.setLayoutCount = 1;
-	pipelineLayoutInfo.pSetLayouts = &descriptorSet.m_descriptorSetLayout;
+	pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 
 	if (vkCreatePipelineLayout(*logicalDevice, &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS)
 	{
@@ -115,7 +114,7 @@ void GraphicsPipeline::createGraphicsPipeline(PhysicalDevice& physicalDevice, Lo
 	pipelineInfo.pColorBlendState = &colorBlending;
 	pipelineInfo.pDynamicState = &dynamicState;
 	pipelineInfo.layout = m_pipelineLayout;
-	pipelineInfo.renderPass = *renderPass;
+	pipelineInfo.renderPass = renderPass;
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 

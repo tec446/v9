@@ -4,8 +4,6 @@
 
 #include "vulkanConfig.h"
 #include "PhysicalDevice.h"
-#include "Instance.h"
-#include "Surface.h"
 
 class LogicalDevice
 {
@@ -14,10 +12,12 @@ public:
 	VkQueue  m_graphicsQueue;
 	VkQueue  m_presentQueue;
 
-	void createLogicalDevice(PhysicalDevice& physicalDevice, Instance& instance, Surface& surface);
+	void createLogicalDevice(PhysicalDevice& physicalDevice, const std::vector<const char*>& validationLayers, VkSurfaceKHR& surface);
 
 	// Allows us to use the class like a pointer
 	auto operator*() -> VkDevice& { return m_logicalDevice; }
+
+
 
 }; // class LogicalDevice
 

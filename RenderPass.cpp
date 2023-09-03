@@ -1,9 +1,16 @@
 #include "RenderPass.h"
 
-void RenderPass::createRenderPass(PhysicalDevice& physicalDevice, LogicalDevice& logicalDevice, SwapChain& swapChain, RenderPass& renderPass)
+void RenderPass::createRenderPass
+(
+	PhysicalDevice& physicalDevice, 
+	VkDevice& logicalDevice, 
+	VkFormat& swapChainImageFormat,
+	VkFormat& swapChainDepthFormat,
+	RenderPass& renderPass
+)
 {
 	VkAttachmentDescription colorAttachment{};
-	colorAttachment.format = swapChain.m_swapChainImageFormat;
+	colorAttachment.format = swapChainImageFormat;
 	colorAttachment.samples = physicalDevice.m_msaaSamples;
 	colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -13,7 +20,7 @@ void RenderPass::createRenderPass(PhysicalDevice& physicalDevice, LogicalDevice&
 	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 	VkAttachmentDescription depthAttachment{};
-	depthAttachment.format = swapChain.findDepthFormat(physicalDevice);
+	depthAttachment.format = swapChainDepthFormat;
 	depthAttachment.samples = physicalDevice.m_msaaSamples;
 	depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -23,7 +30,7 @@ void RenderPass::createRenderPass(PhysicalDevice& physicalDevice, LogicalDevice&
 	depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 	VkAttachmentDescription colorAttachmentResolve{};
-	colorAttachmentResolve.format = swapChain.m_swapChainImageFormat;
+	colorAttachmentResolve.format = swapChainImageFormat;
 	colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
 	colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 	colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -69,7 +76,7 @@ void RenderPass::createRenderPass(PhysicalDevice& physicalDevice, LogicalDevice&
 	renderPassInfo.dependencyCount = 1;
 	renderPassInfo.pDependencies = &dependency;
 
-	if (vkCreateRenderPass(*logicalDevice, &renderPassInfo, nullptr, &*renderPass) != VK_SUCCESS)
+	if (vkCreateRenderPass(logicalDevice, &renderPassInfo, nullptr, &*renderPass) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create render pass!");
 	}

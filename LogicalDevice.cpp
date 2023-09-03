@@ -1,8 +1,8 @@
 #include "LogicalDevice.h"
 
-void LogicalDevice::createLogicalDevice(PhysicalDevice& physicalDevice, Instance& instance, Surface& surface)
+void LogicalDevice::createLogicalDevice(PhysicalDevice& physicalDevice, const std::vector<const char*>& validationLayers, VkSurfaceKHR& surface)
 {
-	PhysicalDevice::QueueFamilyIndices indices = physicalDevice.findQueueFamilies(*physicalDevice, surface);
+	QueueFamilyIndices indices = physicalDevice.findQueueFamilies(*physicalDevice, surface);
 
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 	std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(),
@@ -33,8 +33,8 @@ void LogicalDevice::createLogicalDevice(PhysicalDevice& physicalDevice, Instance
 
 	if (enableValidationLayers)
 	{
-		createInfo.enabledLayerCount = static_cast<uint32_t>(instance.m_validationLayers.size());
-		createInfo.ppEnabledLayerNames = instance.m_validationLayers.data();
+		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+		createInfo.ppEnabledLayerNames = validationLayers.data();
 	}
 	else
 	{

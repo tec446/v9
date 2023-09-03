@@ -3,35 +3,28 @@
 #include <vulkan/vulkan.h>
 #include <glm/fwd.hpp>
 #include <glm/gtx/hash.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 #include <chrono>
 
+#include "Buffer.h"
 #include "LogicalDevice.h"
 #include "GraphicsPipeline.h"
 #include "CommandPool.h"
 
-
 class UniformBuffers
 {
 public:
-	struct UniformBufferObject {
-		alignas(16) glm::mat4 model;
-		alignas(16) glm::mat4 view;
-		alignas(16) glm::mat4 proj;
-	};
-
 	std::vector<VkBuffer>		m_uniformBuffers;
 	std::vector<VkDeviceMemory> m_uniformBuffersMemory;
 	std::vector<void*>			m_uniformBuffersMapped;
 
-	void createUniformBuffers(LogicalDevice& logicalDevice);
-	void createVertexBuffer(LogicalDevice& logicalDevice);
-	void createIndexBuffer();
-	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-	void vkUpdateUniformBuffer(uint32_t currentImage);
-	void copyBuffer(LogicalDevice& logicalDevice, CommandPool& commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-	void copyBufferToImage(LogicalDevice& logicalDevice, CommandPool& commandPool, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
-	
+	void createUniformBuffers(PhysicalDevice& physicalDevice, LogicalDevice& logicalDevice, int maxFramesInFlight);
+	void createVertexBuffer(PhysicalDevice& physicalDevice, LogicalDevice& logicalDevice, CommandPool& commandPool);
+	void createIndexBuffer(PhysicalDevice& physicalDevice, LogicalDevice& logicalDevice, CommandPool& commandPool);
+	void vkUpdateUniformBuffer(SwapChain& swapChain, uint32_t currentImage);
+
 	// Allows us to use UniformBuffers as a pointer
 	auto operator[](int i) -> VkBuffer& { return m_uniformBuffers[i]; }
 

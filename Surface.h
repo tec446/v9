@@ -10,9 +10,9 @@
 class Surface
 {
 public:
-	void createSurface(Instance& instance, Window& window);
-
 	VkSurfaceKHR m_surface{};
+	
+	void createSurface(VkInstance& instance, GLFWwindow& window);
 
 	// Allows us to use the class like a pointer
 	VkSurfaceKHR& operator*() { return m_surface; }

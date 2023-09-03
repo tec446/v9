@@ -2,12 +2,11 @@
 
 #include <vulkan/vulkan.h>
 #include <vector>
+#include <array>
 #include <stdexcept>
 
 #include "PhysicalDevice.h"
 #include "LogicalDevice.h"
-#include "DescriptorSet.h"
-#include "GraphicsPipeline.h"
 
 class CommandPool
 {
@@ -22,14 +21,12 @@ public:
 	VkDeviceMemory				 m_indexBufferMemory;
 	std::vector<Vertex>			 m_vertices;
 	std::vector<uint32_t>		 m_indices;
-	VkBuffer					 m_vertexBuffer;
-	VkDeviceMemory				 m_vertexBufferMemory;
 	VkCommandPool				 m_commandPool;
 	std::vector<VkCommandBuffer> m_commandBuffers;
 
 	void createCommandPool(PhysicalDevice& physicalDevice, LogicalDevice& logicalDevice, Surface& surface);
-	void createCommandBuffers(LogicalDevice& logicalDevice, DescriptorSet& descriptorSet);
-	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, RenderPass& renderPass, SwapChain& swapChain, GraphicsPipeline& graphicsPipeline, DescriptorSet& descriptorSet);
+	void createCommandBuffers(LogicalDevice& logicalDevice, int maxFramesInFlight);
+	void recordCommandBuffer(VkCommandBuffer commandBuffer, std::vector<VkDescriptorSet>& descriptorSets, VkPipeline& graphicsPipeline, VkPipelineLayout& graphicsPipelineLayout, uint32_t imageIndex, VkRenderPass& renderPass, std::vector<VkFramebuffer>& frameBuffers, VkExtent2D extent2d);
 	auto beginSingleTimeCommands(LogicalDevice& logicalDevice) -> VkCommandBuffer;
 	void endSingleTimeCommands(LogicalDevice& logicalDevice, VkCommandBuffer commandBuffer);
 

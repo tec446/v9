@@ -1,3 +1,5 @@
+#pragma once 
+
 #define GLFW_INCLUDE_VULKAN
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -40,7 +42,6 @@
 #include "DescriptorSet.h"
 #include "CommandPool.h"
 #include "TextureImage.h"
-#include "TextureSampler.h"
 #include "ModelLoader.h"
 #include "UniformBuffers.h"
 #include "SyncObjects.h"
@@ -71,16 +72,10 @@ private:
 	GraphicsPipeline m_graphicsPipeline{};
 	CommandPool      m_commandPool{};
 	TextureImage	 m_textureImage{};
-	TextureSampler   m_textureSampler{};
 	ModelLoader		 m_modelLoader{};
 	UniformBuffers   m_uniformBuffers{};
 	SyncObjects      m_syncObjects{};
 	// Wrappers
-
-
-
-
-
 
 	bool framebufferResized = false;
 
@@ -92,23 +87,23 @@ private:
 		m_logicalDevice.createLogicalDevice(m_physicalDevice, m_instance, m_surface);
 		m_swapChain.createSwapChain(m_physicalDevice, m_logicalDevice, m_surface, m_window);
 		m_swapChain.createImageViews(m_logicalDevice);
-		m_renderPass.createRenderPass(m_physicalDevice, m_logicalDevice, m_swapChain);
+		m_renderPass.createRenderPass(m_physicalDevice, m_logicalDevice, m_swapChain, m_renderPass);
 		m_descriptorSets.createDescriptorSetLayout(m_logicalDevice);
 		m_graphicsPipeline.createGraphicsPipeline(m_physicalDevice, m_logicalDevice, m_descriptorSets, m_renderPass);
 		m_commandPool.createCommandPool(m_physicalDevice, m_logicalDevice, m_surface);
 		m_swapChain.createColorResources(m_physicalDevice, m_logicalDevice, m_swapChain);
 		m_swapChain.createDepthResources(m_physicalDevice, m_logicalDevice, m_swapChain);
 		m_swapChain.createFramebuffers(m_logicalDevice, m_renderPass);
-		m_textureImage.createTextureImage();
-		m_textureSampler.createTextureSampler();
-		m_modelLoader.loadModel();
-		m_uniformBuffers.createVertexBuffer(m_logicalDevice);
-		m_uniformBuffers.createIndexBuffer();
-		m_uniformBuffers.createUniformBuffers(m_logicalDevice);
+		m_textureImage.createTextureImage(m_physicalDevice, m_logicalDevice, m_commandPool, m_swapChain, m_modelLoader);
+		m_textureImage.createTextureSampler(m_physicalDevice, m_logicalDevice, m_textureImage);
+		m_modelLoader.loadModel(m_commandPool);
+		m_uniformBuffers.createVertexBuffer(m_physicalDevice, m_logicalDevice, m_commandPool);
+		m_uniformBuffers.createIndexBuffer(m_physicalDevice, m_logicalDevice, m_commandPool);
+		m_uniformBuffers.createUniformBuffers(m_physicalDevice, m_logicalDevice, m_descriptorSets);
 		m_descriptorSets.createDescriptorPool(m_logicalDevice);
 		m_descriptorSets.createDescriptorSets(m_logicalDevice, m_uniformBuffers, m_textureImage);
 		m_commandPool.createCommandBuffers(m_logicalDevice, m_descriptorSets);
-		m_syncObjects.createSyncObjects(*m_logicalDevice);
+		m_syncObjects.createSyncObjects(*m_logicalDevice, m_commandPool, m_descriptorSets);
 
 	} // initVulkan()
 
@@ -125,47 +120,47 @@ private:
 
 	void cleanup()
 	{
-		m_swapChain.cleanupSwapChain();
+		m_swapChain.cleanupSwapChain(*m_logicalDevice);
 
-		vkDestroySampler(*m_logicalDevice, textureSampler, nullptr);
-		vkDestroyImageView(*m_logicalDevice, textureImageView, nullptr);
-		vkDestroyImage(*m_logicalDevice, textureImage, nullptr);
-		vkFreeMemory(*m_logicalDevice, textureImageMemory, nullptr);
+		vkDestroySampler(*m_logicalDevice, m_textureImage.m_textureSampler, nullptr);
+		vkDestroyImageView(*m_logicalDevice, m_textureImage.m_textureImageView, nullptr);
+		vkDestroyImage(*m_logicalDevice, *m_textureImage, nullptr);
+		vkFreeMemory(*m_logicalDevice, m_textureImage.m_textureImageMemory, nullptr);
 
-		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+		for (size_t i = 0; i < m_descriptorSets.MAX_FRAMES_IN_FLIGHT; i++)
 		{
-			vkDestroyBuffer(*m_logicalDevice, uniformBuffers[i], nullptr);
-			vkFreeMemory(*m_logicalDevice, uniformBuffersMemory[i], nullptr);
+			vkDestroyBuffer(*m_logicalDevice, m_uniformBuffers[i], nullptr);
+			vkFreeMemory(*m_logicalDevice, m_uniformBuffers.m_uniformBuffersMemory[i], nullptr);
 		}
 
-		vkDestroyDescriptorPool(*m_logicalDevice, descriptorPool, nullptr);
-		vkDestroyDescriptorSetLayout(*m_logicalDevice, descriptorSetLayout, nullptr);
+		vkDestroyDescriptorPool(*m_logicalDevice, m_descriptorSets.m_descriptorPool, nullptr);
+		vkDestroyDescriptorSetLayout(*m_logicalDevice, m_descriptorSets.m_descriptorSetLayout, nullptr);
 
-		vkDestroyBuffer(*m_logicalDevice, indexBuffer, nullptr);
-		vkFreeMemory(*m_logicalDevice, indexBufferMemory, nullptr);
+		vkDestroyBuffer(*m_logicalDevice, m_commandPool.m_indexBuffer, nullptr);
+		vkFreeMemory(*m_logicalDevice, m_commandPool.m_indexBufferMemory, nullptr);
 
-		vkDestroyBuffer(*m_logicalDevice, vertexBuffer, nullptr);
-		vkFreeMemory(*m_logicalDevice, vertexBufferMemory, nullptr);
+		vkDestroyBuffer(*m_logicalDevice, m_commandPool.m_vertexBuffer, nullptr);
+		vkFreeMemory(*m_logicalDevice, m_commandPool.m_vertexBufferMemory, nullptr);
 
-		vkDestroyPipeline(*m_logicalDevice, graphicsPipeline, nullptr);
-		vkDestroyPipelineLayout(*m_logicalDevice, pipelineLayout, nullptr);
+		vkDestroyPipeline(*m_logicalDevice, *m_graphicsPipeline, nullptr);
+		vkDestroyPipelineLayout(*m_logicalDevice, m_graphicsPipeline.m_pipelineLayout, nullptr);
 
-		vkDestroyRenderPass(*m_logicalDevice, renderPass, nullptr);
+		vkDestroyRenderPass(*m_logicalDevice, *m_renderPass, nullptr);
 
-		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+		for (size_t i = 0; i < m_descriptorSets.MAX_FRAMES_IN_FLIGHT; i++)
 		{
-			vkDestroySemaphore(*m_logicalDevice, imageAvailableSemaphores[i], nullptr);
-			vkDestroySemaphore(*m_logicalDevice, renderFinishedSemaphores[i], nullptr);
-			vkDestroyFence(*m_logicalDevice, inFlightFences[i], nullptr);
+			vkDestroySemaphore(*m_logicalDevice, m_commandPool.m_imageAvailableSemaphores[i], nullptr);
+			vkDestroySemaphore(*m_logicalDevice, m_commandPool.m_renderFinishedSemaphores[i], nullptr);
+			vkDestroyFence(*m_logicalDevice, m_commandPool.m_inFlightFences[i], nullptr);
 		}
 
-		vkDestroyCommandPool(*m_logicalDevice, commandPool, nullptr);
+		vkDestroyCommandPool(*m_logicalDevice, *m_commandPool, nullptr);
 
 		vkDestroyDevice(*m_logicalDevice, nullptr);
 
 		if (enableValidationLayers)
 		{
-			m_debugMessenger.DestroyDebugUtilsMessengerEXT(*m_instance, *m_debugMessenger, nullptr);
+			m_debugMessenger.DestroyDebugUtilsMessengerEXT(m_instance, *m_debugMessenger, nullptr);
 		}
 
 		vkDestroySurfaceKHR(*m_instance, *m_surface, nullptr);
@@ -178,8 +173,6 @@ private:
 
 	bool hasStencilComponent(VkFormat format)
 	{ return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT; }
-
-
 
 	void drawFrame() {
 		vkWaitForFences(*m_logicalDevice, 1, &m_commandPool.m_inFlightFences[m_commandPool.m_currentFrame], VK_TRUE, UINT64_MAX);
@@ -198,7 +191,7 @@ private:
 		// Only reset fence when submitting work
 		vkResetFences(*m_logicalDevice, 1, &m_commandPool.m_inFlightFences[m_commandPool.m_currentFrame]);
 
-		m_uniformBuffers.vkUpdateUniformBuffer(m_commandPool.m_currentFrame);
+		m_uniformBuffers.vkUpdateUniformBuffer(m_swapChain, m_commandPool.m_currentFrame);
 
 		vkResetCommandBuffer(m_commandPool.m_commandBuffers[m_commandPool.m_currentFrame], 0);
 		m_commandPool.recordCommandBuffer(m_commandPool.m_commandBuffers[m_commandPool.m_currentFrame], imageIndex, m_renderPass, m_swapChain, m_graphicsPipeline, m_descriptorSets);
@@ -241,12 +234,6 @@ private:
 
 		m_commandPool.m_currentFrame = (m_commandPool.m_currentFrame + 1) % m_descriptorSets.MAX_FRAMES_IN_FLIGHT;
 	}
-
-	static void framebufferResizeCallback(GLFWwindow* window, int width, int height)
-	{
-		auto app = reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window));
-		app->framebufferResized = true;
-	} // framebufferResizeCallback()
 
 }; // HelloTriangleApplication
 

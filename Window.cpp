@@ -1,7 +1,5 @@
 #include "Window.h"
 
-
-
 void Window::initWindow() 
 {
 	glfwInit();
@@ -15,3 +13,9 @@ void Window::initWindow()
 	glfwSetFramebufferSizeCallback(m_window, framebufferResizeCallback);
 
 } // void initWindow()
+
+void Window::framebufferResizeCallback(GLFWwindow* window, int width, int height)
+{
+	auto app = reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window));
+	app->framebufferResized = true;
+} // framebufferResizeCallback()

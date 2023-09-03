@@ -13,6 +13,8 @@ public:
 	
 	void initWindow();
 
+	static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
+
 	// Allows us to use the class like a pointer
 	GLFWwindow* operator*() { return m_window; }
 

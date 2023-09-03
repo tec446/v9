@@ -16,9 +16,9 @@ void CommandPool::createCommandPool(PhysicalDevice& physicalDevice, LogicalDevic
 	}
 } // createCommandPool()
 
-void CommandPool::createCommandBuffers(LogicalDevice& logicalDevice, DescriptorSet& descriptorSet)
+void CommandPool::createCommandBuffers(LogicalDevice& logicalDevice, int maxFramesInFlight)
 {
-	m_commandBuffers.resize(descriptorSet.MAX_FRAMES_IN_FLIGHT);
+	m_commandBuffers.resize(maxFramesInFlight);
 	VkCommandBufferAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -30,7 +30,18 @@ void CommandPool::createCommandBuffers(LogicalDevice& logicalDevice, DescriptorS
 	}
 } // createCommandBuffers()
 
-void CommandPool::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, RenderPass& renderPass, SwapChain& swapChain, GraphicsPipeline& graphicsPipeline, DescriptorSet& descriptorSet)
+void CommandPool::recordCommandBuffer
+(
+	VkCommandBuffer commandBuffer, 
+	std::vector<VkDescriptorSet>& descriptorSets,
+	VkPipeline&	graphicsPipeline,
+	VkPipelineLayout& graphicsPipelineLayout,
+	uint32_t imageIndex, 
+	VkRenderPass& renderPass, 
+	std::vector<VkFramebuffer>& 
+	frameBuffers, 
+	VkExtent2D extent2d
+)
 {
 	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -43,10 +54,10 @@ void CommandPool::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t im
 
 	VkRenderPassBeginInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassInfo.renderPass = *renderPass;
-	renderPassInfo.framebuffer = swapChain.m_swapChainFramebuffers[imageIndex];
+	renderPassInfo.renderPass = renderPass;
+	renderPassInfo.framebuffer = frameBuffers[imageIndex];
 	renderPassInfo.renderArea.offset = { 0,0 };
-	renderPassInfo.renderArea.extent = swapChain.m_swapChainExtent;
+	renderPassInfo.renderArea.extent = extent2d;
 	std::array<VkClearValue, 2> clearValues{};
 	clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
 	clearValues[1].depthStencil = { 1.0f, 0 };
@@ -55,20 +66,20 @@ void CommandPool::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t im
 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	{
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *graphicsPipeline);
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
 		VkViewport viewport{};
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
-		viewport.width = static_cast<float>(swapChain.m_swapChainExtent.width);
-		viewport.height = static_cast<float>(swapChain.m_swapChainExtent.height);
+		viewport.width = static_cast<float>(extent2d.width);
+		viewport.height = static_cast<float>(extent2d.height);
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
 		VkRect2D scissor{};
 		scissor.offset = { 0,0 };
-		scissor.extent = swapChain.m_swapChainExtent;
+		scissor.extent = extent2d;
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 		VkBuffer vertexBuffers[] = { m_vertexBuffer };
@@ -76,8 +87,8 @@ void CommandPool::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t im
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 		vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline.m_pipelineLayout,
-			0, 1, &descriptorSet.m_descriptorSets[m_currentFrame], 0, nullptr);
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineLayout,
+			0, 1, &descriptorSets[m_currentFrame], 0, nullptr);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_indices.size()), 1, 0, 0, 0);
 	}
 	vkCmdEndRenderPass(commandBuffer);

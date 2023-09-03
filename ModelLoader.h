@@ -5,16 +5,11 @@
 #include <stdexcept>
 #include <unordered_map>
 
-#include "GraphicsPipeline.h"
-#include "CommandPool.h"
+#include "Types.h"
+#include "TempMagicValues.h"
 
-class ModelLoader
+namespace ModelLoader
 {
-public:
-	const std::string MODEL_PATH = "viking_room.obj";
-	const std::string TEXTURE_PATH = "viking_room.png";
+	void loadModel(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
 
-
-	void loadModel(CommandPool& commandPool);
-
-}; // class ModelLoader
+}; // namespace ModelLoader

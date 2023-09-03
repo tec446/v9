@@ -1,7 +1,7 @@
 #include "DescriptorSet.h"
 
 
-void DescriptorSet::createDescriptorSetLayout(LogicalDevice& logicalDevice)
+void DescriptorSet::createDescriptorSetLayout(VkDevice& logicalDevice)
 {
 	VkDescriptorSetLayoutBinding uboLayoutBinding{};
 	uboLayoutBinding.binding = 0;
@@ -23,13 +23,13 @@ void DescriptorSet::createDescriptorSetLayout(LogicalDevice& logicalDevice)
 	layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
 	layoutInfo.pBindings = bindings.data();
 
-	if (vkCreateDescriptorSetLayout(*logicalDevice, &layoutInfo, nullptr, &m_descriptorSetLayout) != VK_SUCCESS)
+	if (vkCreateDescriptorSetLayout(logicalDevice, &layoutInfo, nullptr, &m_descriptorSetLayout) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create descriptor set layout!");
 	}
 } // createDescriptorSetLayout
 
-void DescriptorSet::createDescriptorSets(LogicalDevice& logicalDevice, UniformBuffers& uniformBuffers, TextureImage& textureImage)
+void DescriptorSet::createDescriptorSets(VkDevice& logicalDevice, std::vector<VkBuffer>& uniformBuffers, VkImageView& textureImageView, VkSampler& textureSampler)
 {
 	std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, m_descriptorSetLayout);
 	VkDescriptorSetAllocateInfo allocInfo{};
@@ -39,7 +39,7 @@ void DescriptorSet::createDescriptorSets(LogicalDevice& logicalDevice, UniformBu
 	allocInfo.pSetLayouts = layouts.data();
 
 	m_descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-	if (vkAllocateDescriptorSets(*logicalDevice, &allocInfo, m_descriptorSets.data()) != VK_SUCCESS)
+	if (vkAllocateDescriptorSets(logicalDevice, &allocInfo, m_descriptorSets.data()) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to allocate descriptor sets!");
 	}
@@ -49,12 +49,12 @@ void DescriptorSet::createDescriptorSets(LogicalDevice& logicalDevice, UniformBu
 		VkDescriptorBufferInfo bufferInfo{};
 		bufferInfo.buffer = uniformBuffers[i];
 		bufferInfo.offset = 0;
-		bufferInfo.range = sizeof(UniformBuffers::UniformBufferObject);
+		bufferInfo.range = sizeof(UniformBufferObject);
 
 		VkDescriptorImageInfo imageInfo{};
 		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		imageInfo.imageView = textureImage.m_textureImageView;
-		imageInfo.sampler = textureImage.m_textureSampler;
+		imageInfo.imageView = textureImageView;
+		imageInfo.sampler = textureSampler;
 
 		std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
 
@@ -74,11 +74,11 @@ void DescriptorSet::createDescriptorSets(LogicalDevice& logicalDevice, UniformBu
 		descriptorWrites[1].descriptorCount = 1;
 		descriptorWrites[1].pImageInfo = &imageInfo;
 
-		vkUpdateDescriptorSets(*logicalDevice, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+		vkUpdateDescriptorSets(logicalDevice, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 	}
 } // createDescriptorSets()
 
-void DescriptorSet::createDescriptorPool(LogicalDevice& logicalDevice)
+void DescriptorSet::createDescriptorPool(VkDevice& logicalDevice)
 {
 	std::array<VkDescriptorPoolSize, 2> poolSizes{};
 	poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -92,7 +92,7 @@ void DescriptorSet::createDescriptorPool(LogicalDevice& logicalDevice)
 	poolInfo.pPoolSizes = poolSizes.data();
 	poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
-	if (vkCreateDescriptorPool(*logicalDevice, &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS)
+	if (vkCreateDescriptorPool(logicalDevice, &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create descriptor pool!");
 	}

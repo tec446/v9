@@ -1,6 +1,5 @@
 #include "IO.h"
 
-
 auto IO::readFile(const std::string& filename) -> std::vector<char>
 {
 	std::ifstream file(filename, std::ios::ate | std::ios::binary);

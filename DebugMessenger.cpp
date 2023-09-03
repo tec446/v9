@@ -1,4 +1,3 @@
-
 #include "DebugMessenger.h"
 
 auto DebugMessenger::debugCallback(
@@ -11,14 +10,14 @@ auto DebugMessenger::debugCallback(
 	return VK_FALSE;
 } // debugCallback()
 
-void DebugMessenger::setupDebugMessenger(Instance& instance)
+void DebugMessenger::setupDebugMessenger(VkInstance& vkInstance)
 {
 	if (!enableValidationLayers) return;
 
 	VkDebugUtilsMessengerCreateInfoEXT createInfo;
 	populateDebugMessengerCreateInfo(createInfo);
 
-	if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &m_debugMessenger) != VK_SUCCESS)
+	if (CreateDebugUtilsMessengerEXT(vkInstance, &createInfo, nullptr, &m_debugMessenger) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to setup debug messenger!");
 	}
@@ -26,14 +25,14 @@ void DebugMessenger::setupDebugMessenger(Instance& instance)
 } // setupDebugMessenger()
 
 VkResult DebugMessenger::CreateDebugUtilsMessengerEXT(
-		  Instance&							  instance,
+		  VkInstance&						  vkInstance,
 	const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
 	const VkAllocationCallbacks*			  pAllocator,
 	      VkDebugUtilsMessengerEXT*			  pDebugMessenger) 
 {
-	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(*instance, "vkCreateDebugUtilsMessengerEXT");
+	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(vkInstance, "vkCreateDebugUtilsMessengerEXT");
 	if (func != nullptr) {
-		return func(*instance, pCreateInfo, pAllocator, pDebugMessenger);
+		return func(vkInstance, pCreateInfo, pAllocator, pDebugMessenger);
 	}
 	else {
 		return VK_ERROR_EXTENSION_NOT_PRESENT;
@@ -42,13 +41,13 @@ VkResult DebugMessenger::CreateDebugUtilsMessengerEXT(
 } // CreateDebugUtilsMessengerEXT()
 
 void DebugMessenger::DestroyDebugUtilsMessengerEXT(
-		  Instance&				   instance, 
+		  VkInstance&			   vkInstance,
 		  VkDebugUtilsMessengerEXT debugMessenger, 
 	const VkAllocationCallbacks*   pAllocator) 
 {
-	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(*instance, "vkDestroyDebugUtilsMessengerEXT");
+	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(vkInstance, "vkDestroyDebugUtilsMessengerEXT");
 	if (func != nullptr) {
-		func(*instance, debugMessenger, pAllocator);
+		func(vkInstance, debugMessenger, pAllocator);
 	}
 
 } // DestroyDebugUtilsMessengerEXT()

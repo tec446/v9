@@ -4,7 +4,6 @@
 #include <stdexcept>
 
 #include "vulkanConfig.h"
-#include "Instance.h"
 
 class DebugMessenger
 {
@@ -18,13 +17,13 @@ private:
 		void* pUserData
 	) -> VKAPI_ATTR VkBool32 VKAPI_CALL;
 	
-	VkResult CreateDebugUtilsMessengerEXT(Instance& instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger);
+	VkResult CreateDebugUtilsMessengerEXT(VkInstance& instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger);
 public:
 
 
 
-	void setupDebugMessenger(Instance& instance);
-	void DestroyDebugUtilsMessengerEXT(Instance& instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
+	void setupDebugMessenger(VkInstance& instance);
+	void DestroyDebugUtilsMessengerEXT(VkInstance& instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
 	void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 
 	// Allows us to use the class like a pointer

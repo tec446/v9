@@ -63,9 +63,6 @@
     <ClCompile Include="TextureImage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TextureSampler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ModelLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -73,6 +70,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="IO.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Buffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -133,9 +133,6 @@
     <ClInclude Include="TextureImage.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="TextureSampler.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="ModelLoader.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -143,6 +140,15 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="IO.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Buffer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Types.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TempMagicValues.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

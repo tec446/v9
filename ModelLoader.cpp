@@ -1,13 +1,16 @@
 #include "ModelLoader.h"
 
-void ModelLoader::loadModel(CommandPool& commandPool)
+namespace ModelLoader
+{
+
+void loadModel(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
 {
 	tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
 	std::vector<tinyobj::material_t> materials;
 	std::string warn, err;
 
-	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, MODEL_PATH.c_str()))
+	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, TempMagicValues::MODEL_PATH.c_str()))
 	{
 		throw std::runtime_error(warn + err);
 	}
@@ -35,11 +38,13 @@ void ModelLoader::loadModel(CommandPool& commandPool)
 
 			if (uniqueVertices.count(vertex) == 0)
 			{
-				uniqueVertices[vertex] = static_cast<uint32_t>(commandPool.m_vertices.size());
-				commandPool.m_vertices.push_back(vertex);
+				uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
+				vertices.push_back(vertex);
 			}
 
-			commandPool.m_indices.push_back(uniqueVertices[vertex]);
+			indices.push_back(uniqueVertices[vertex]);
 		}
 	}
 } // loadModel()
+
+} // namespace ModelLoader

@@ -5,9 +5,7 @@
 #include <vector>
 #include <stdexcept>
 
-#include "LogicalDevice.h"
-#include "UniformBuffers.h"
-#include "TextureImage.h"
+#include "Types.h"
 
 class DescriptorSet
 {
@@ -18,9 +16,9 @@ public:
 	VkDescriptorPool			 m_descriptorPool{};
 	std::vector<VkDescriptorSet> m_descriptorSets{};
 
-	void createDescriptorSetLayout(LogicalDevice& logicalDevice);
-	void createDescriptorSets(LogicalDevice& logicalDevice, UniformBuffers& uniformBuffer, TextureImage& textureImage);
-	void createDescriptorPool(LogicalDevice&);
+	void createDescriptorSetLayout(VkDevice& logicalDevice);
+	void createDescriptorSets(VkDevice& logicalDevice, std::vector<VkBuffer>& uniformBuffers, VkImageView& textureImageView, VkSampler& textureSampler);
+	void createDescriptorPool(VkDevice&);
 
 	// Allows us to use DescriptorSet as a pointer
 	auto operator*() -> VkDescriptorSetLayout& { return m_descriptorSetLayout; }

@@ -4,15 +4,13 @@
 #include <array>
 
 #include "PhysicalDevice.h"
-#include "SwapChain.h"
 
 class RenderPass
 {
 public:
 	VkRenderPass m_renderPass;
 
-	void createRenderPass(PhysicalDevice& physicalDevice, LogicalDevice& logicalDevice, SwapChain& swapChain, RenderPass& renderPass);
-
+	void createRenderPass(PhysicalDevice& physicalDevice, VkDevice& logicalDevice, VkFormat& swapChainImageFormat, VkFormat& swapChainDepthFormat, RenderPass& renderPass);
 
 	// Allows us to use the class like a pointer
 	auto operator*() -> VkRenderPass& { return m_renderPass; }
