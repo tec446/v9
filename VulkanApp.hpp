@@ -24,6 +24,7 @@
 
 #include "Config.h"
 #include "Types.h"
+#include "Instance.h"
 #include "DebugMessenger.h"
 #include "Device.h"
 
@@ -32,10 +33,6 @@ const uint32_t HEIGHT{ 600 };
 
 const std::string MODEL_PATH = "viking_room.obj";
 const std::string TEXTURE_PATH = "viking_room.png";
-
-const std::vector<const char*> validationLayers = {
-	"VK_LAYER_KHRONOS_validation"
-};
 
 class HelloTriangleApplication {
 public:
@@ -48,12 +45,12 @@ public:
 private:
 	//
 	DebugMessenger m_debugMessenger;
+	Instance       m_instance;
 	Device         m_device;
 	//
 
 	GLFWwindow* window{};
 
-	VkInstance instance;
 	VkSurfaceKHR surface;
 
 	VkSwapchainKHR swapChain;
@@ -126,9 +123,9 @@ private:
 
 	void initVulkan() {
 		createInstance();
-		m_debugMessenger.setupDebugMessenger(instance);
+		m_debugMessenger.setupDebugMessenger(*m_instance);
 		createSurface();
-		m_device.pickPhysicalDevice(instance, surface);
+		m_device.pickPhysicalDevice(*m_instance, surface);
 		m_device.createLogicalDevice(validationLayers, surface);
 		createSwapChain();
 		createImageViews();
@@ -226,10 +223,10 @@ private:
 		vkDestroyDevice(*m_device, nullptr);
 
 		if (enableValidationLayers) 
-		{ m_debugMessenger.DestroyDebugUtilsMessengerEXT(instance, nullptr); }
+		{ m_debugMessenger.DestroyDebugUtilsMessengerEXT(*m_instance, nullptr); }
 
-		vkDestroySurfaceKHR(instance, surface, nullptr);
-		vkDestroyInstance(instance, nullptr);
+		vkDestroySurfaceKHR(*m_instance, surface, nullptr);
+		vkDestroyInstance(*m_instance, nullptr);
 
 		glfwDestroyWindow(window);
 
@@ -298,15 +295,15 @@ private:
 			createInfo.pNext = nullptr;
 		}
 
-		if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS)
+		if (vkCreateInstance(&createInfo, nullptr, &*m_instance) != VK_SUCCESS)
 		{
-			throw std::runtime_error("failed to create instance!");
+			throw std::runtime_error("failed to create *m_instance!");
 		}
 	}
 
 	void createSurface()
 	{
-		if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS)
+		if (glfwCreateWindowSurface(*m_instance, window, nullptr, &surface) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create window surface!");
 		}
@@ -672,9 +669,6 @@ private:
 		depthImageView = createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
 	}
 
-
-
-
 	VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
 	{
 		for (VkFormat format : candidates)
@@ -743,8 +737,6 @@ private:
 
 		generateMipmaps(textureImage, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, mipLevels);
 	}
-
-
 
 	void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels)
 	{
@@ -1112,14 +1104,6 @@ private:
 		}
 	}
 
-
-
-
-
-
-
-
-
 	void createDescriptorPool()
 	{
 		std::array<VkDescriptorPoolSize, 2> poolSizes{};
@@ -1189,9 +1173,6 @@ private:
 		}
 	}
 
-
-
-
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
 	{
 		VkBufferCreateInfo bufferInfo{};
@@ -1220,10 +1201,6 @@ private:
 
 		vkBindBufferMemory(*m_device, buffer, bufferMemory, 0);
 	}
-
-
-
-
 
 	VkCommandBuffer beginSingleTimeCommands()
 	{
