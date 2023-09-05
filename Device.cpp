@@ -1,6 +1,6 @@
-#include "PhysicalDevice.h"
+#include "Device.h"
 
-void PhysicalDevice::pickPhysicalDevice(VkInstance& instance, VkSurfaceKHR& surface)
+void Device::pickPhysicalDevice(VkInstance& instance, VkSurfaceKHR& surface)
 {
 	uint32_t deviceCount = 0;
 	vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
@@ -14,18 +14,18 @@ void PhysicalDevice::pickPhysicalDevice(VkInstance& instance, VkSurfaceKHR& surf
 	{
 		if (isDeviceSuitable(device, surface))
 		{
-			m_physicalDevice = device;
+			m_physical = device;
 			m_msaaSamples = getMaxUsableSampleCount();
 			break;
 		}
 	}
-	if (m_physicalDevice == VK_NULL_HANDLE)
+	if (m_physical == VK_NULL_HANDLE)
 	{
 		throw std::runtime_error("failed to find a suitable GPU");
 	}
 } // pickPhysicalDevice()
 
-bool PhysicalDevice::isDeviceSuitable(VkPhysicalDevice& device, VkSurfaceKHR& surface)
+bool Device::isDeviceSuitable(VkPhysicalDevice& device, VkSurfaceKHR& surface)
 {
 	QueueFamilyIndices indices = findQueueFamilies(device, surface);
 
@@ -46,7 +46,7 @@ bool PhysicalDevice::isDeviceSuitable(VkPhysicalDevice& device, VkSurfaceKHR& su
 		supportedFeatures.samplerAnisotropy;
 } // isDeviceSuitable()
 
-auto PhysicalDevice::findQueueFamilies(VkPhysicalDevice& device, VkSurfaceKHR& surface) -> QueueFamilyIndices
+auto Device::findQueueFamilies(VkPhysicalDevice& device, VkSurfaceKHR& surface) -> QueueFamilyIndices
 {
 	QueueFamilyIndices indices;
 	uint32_t queueFamilyCount = 0;
@@ -74,7 +74,7 @@ auto PhysicalDevice::findQueueFamilies(VkPhysicalDevice& device, VkSurfaceKHR& s
 	return indices;
 } // findQueueFamilies()
 
-bool PhysicalDevice::checkDeviceExtensionSupport(VkPhysicalDevice& device) {
+bool Device::checkDeviceExtensionSupport(VkPhysicalDevice& device) {
 	uint32_t extensionCount;
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
@@ -90,10 +90,10 @@ bool PhysicalDevice::checkDeviceExtensionSupport(VkPhysicalDevice& device) {
 	return requiredExtensions.empty();
 }// checkDeviceExtensionSupport()
 
-auto PhysicalDevice::getMaxUsableSampleCount() -> VkSampleCountFlagBits
+auto Device::getMaxUsableSampleCount() -> VkSampleCountFlagBits
 {
 	VkPhysicalDeviceProperties physicalDeviceProperties;
-	vkGetPhysicalDeviceProperties(m_physicalDevice, &physicalDeviceProperties);
+	vkGetPhysicalDeviceProperties(m_physical, &physicalDeviceProperties);
 
 	VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts & physicalDeviceProperties.limits.framebufferDepthSampleCounts;
 	if (counts & VK_SAMPLE_COUNT_64_BIT) { return VK_SAMPLE_COUNT_64_BIT; }
@@ -106,7 +106,7 @@ auto PhysicalDevice::getMaxUsableSampleCount() -> VkSampleCountFlagBits
 	return VK_SAMPLE_COUNT_1_BIT;
 } // getMaxUsableSampleCount()
 
-auto PhysicalDevice::querySwapChainSupport(VkPhysicalDevice& physicalDevice, VkSurfaceKHR& surface) -> SwapChainSupportDetails
+auto Device::querySwapChainSupport(VkPhysicalDevice& physicalDevice, VkSurfaceKHR& surface) -> SwapChainSupportDetails
 {
 	SwapChainSupportDetails details;
 
@@ -130,3 +130,54 @@ auto PhysicalDevice::querySwapChainSupport(VkPhysicalDevice& physicalDevice, VkS
 
 	return details;
 } // querySwapChainSupport()
+
+void Device::createLogicalDevice(const std::vector<const char*>& validationLayers, VkSurfaceKHR& surface)
+{
+	QueueFamilyIndices indices = findQueueFamilies(m_physical, surface);
+
+	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+	std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(),
+											   indices.presentFamily.value() };
+
+	float queuePriority = 1.0f;
+	for (uint32_t queueFamily : uniqueQueueFamilies)
+	{
+		VkDeviceQueueCreateInfo queueCreateInfo{};
+		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueCreateInfo.queueFamilyIndex = queueFamily;
+		queueCreateInfo.queueCount = 1;
+		queueCreateInfo.pQueuePriorities = &queuePriority;
+		queueCreateInfos.push_back(queueCreateInfo);
+	}
+
+	VkPhysicalDeviceFeatures deviceFeatures{};
+	deviceFeatures.samplerAnisotropy = VK_TRUE;
+	deviceFeatures.sampleRateShading = VK_TRUE;
+
+	VkDeviceCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+	createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
+	createInfo.pQueueCreateInfos = queueCreateInfos.data();
+	createInfo.pEnabledFeatures = &deviceFeatures;
+	createInfo.enabledExtensionCount = static_cast<uint32_t>(m_deviceExtensions.size());
+	createInfo.ppEnabledExtensionNames = m_deviceExtensions.data();
+
+	if (enableValidationLayers)
+	{
+		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+		createInfo.ppEnabledLayerNames = validationLayers.data();
+	}
+	else
+	{
+		createInfo.enabledLayerCount = 0;
+	}
+
+	if (vkCreateDevice(m_physical, &createInfo, nullptr, &m_logical) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create logical device!");
+	}
+
+	vkGetDeviceQueue(m_logical, indices.graphicsFamily.value(), 0, &m_graphicsQueue);
+	vkGetDeviceQueue(m_logical, indices.presentFamily.value(), 0, &m_presentQueue);
+
+} // createLogicalDevice()

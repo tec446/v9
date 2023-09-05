@@ -144,9 +144,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DebugMessenger.cpp" />
-    <ClCompile Include="LogicalDevice.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="PhysicalDevice.cpp" />
+    <ClCompile Include="Device.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="compile.bat" />
@@ -156,8 +155,7 @@
   <ItemGroup>
     <ClInclude Include="Config.h" />
     <ClInclude Include="DebugMessenger.h" />
-    <ClInclude Include="LogicalDevice.h" />
-    <ClInclude Include="PhysicalDevice.h" />
+    <ClInclude Include="Device.h" />
     <ClInclude Include="Types.h" />
     <ClInclude Include="VulkanApp.hpp" />
   </ItemGroup>
