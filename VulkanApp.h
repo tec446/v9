@@ -31,6 +31,7 @@
 #include "SwapChain.h"
 #include "RenderPass.h"
 #include "DescriptorSets.h"
+#include "IO.h"
 
 const uint32_t WIDTH{ 800 };
 const uint32_t HEIGHT{ 600 };
@@ -187,8 +188,8 @@ private:
 
 	void createGraphicsPipeline()
 	{
-		auto vertShaderCode = readFile("vert.spv");
-		auto fragShaderCode = readFile("frag.spv");
+		auto vertShaderCode = IO::readFile("vert.spv");
+		auto fragShaderCode = IO::readFile("frag.spv");
 
 		VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
 		VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
@@ -936,7 +937,7 @@ private:
 			}
 		}
 	}
-
+	/*
 	static std::vector<char> readFile(const std::string& filename) {
 		std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
@@ -954,4 +955,6 @@ private:
 
 		return(buffer);
 	}
-};
+	*/
+
+}; // class VulkanApp

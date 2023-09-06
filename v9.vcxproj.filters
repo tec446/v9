@@ -42,6 +42,9 @@
     <ClCompile Include="DescriptorSets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="IO.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader.vert">
@@ -53,6 +56,7 @@
     <None Include="compile.bat">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="IO.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Device.h">
@@ -64,7 +68,7 @@
     <ClInclude Include="Config.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="VulkanApp.hpp">
+    <ClInclude Include="VulkanApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Types.h">

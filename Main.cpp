@@ -6,7 +6,7 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #define GLM_ENABLE_EXPERIMENTAL
 
-#include "VulkanApp.hpp"
+#include "VulkanApp.h"
 
 int main() {
 	HelloTriangleApplication app;
