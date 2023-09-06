@@ -29,6 +29,7 @@
 #include "DebugMessenger.h"
 #include "Device.h"
 #include "SwapChain.h"
+#include "RenderPass.h"
 
 const uint32_t WIDTH{ 800 };
 const uint32_t HEIGHT{ 600 };
@@ -51,13 +52,14 @@ private:
 	Device         m_device;
 	Window		   m_window;
 	SwapChain	   m_swapChain;
+	RenderPass     m_renderPass;
 	//
 	static void framebufferResizeCallbackLambda(GLFWwindow* window, int width, int height) {
 		reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window)) -> framebufferResized = true;
 	};
 	//
 
-	VkRenderPass renderPass;
+	//VkRenderPass renderPass;
 	VkDescriptorSetLayout descriptorSetLayout;
 	VkPipelineLayout pipelineLayout;
 	VkPipeline graphicsPipeline;
@@ -100,13 +102,13 @@ private:
 		m_device.createLogicalDevice(validationLayers, m_window.m_surface);
 		m_swapChain.createSwapChain(m_device, m_window.m_surface, **m_window);
 		m_swapChain.createImageViews(m_device);
-		createRenderPass();
+		m_renderPass.createRenderPass(m_device, m_swapChain);
 		createDescriptorSetLayout();
 		createGraphicsPipeline();
 		createCommandPool();
 		m_swapChain.createColorResources(m_device, m_swapChain);
 		m_swapChain.createDepthResources(m_device, m_swapChain);
-		m_swapChain.createFramebuffers(m_device, renderPass);
+		m_swapChain.createFramebuffers(m_device, *m_renderPass);
 		createTextureImage();
 		createTextureImageView();
 		createTextureSampler();
@@ -158,7 +160,7 @@ private:
 		vkDestroyPipeline(*m_device, graphicsPipeline, nullptr);
 		vkDestroyPipelineLayout(*m_device, pipelineLayout, nullptr);
 
-		vkDestroyRenderPass(*m_device, renderPass, nullptr);
+		vkDestroyRenderPass(*m_device, *m_renderPass, nullptr);
 
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 		{
@@ -180,81 +182,6 @@ private:
 		glfwDestroyWindow(*m_window);
 
 		glfwTerminate();
-	}
-
-	void createRenderPass()
-	{
-		VkAttachmentDescription colorAttachment{};
-		colorAttachment.format = m_swapChain.m_swapChainImageFormat;
-		colorAttachment.samples = m_device.m_msaaSamples;
-		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-		VkAttachmentDescription depthAttachment{};
-		depthAttachment.format = m_swapChain.findDepthFormat(m_device);
-		depthAttachment.samples = m_device.m_msaaSamples;
-		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-		VkAttachmentDescription colorAttachmentResolve{};
-		colorAttachmentResolve.format = m_swapChain.m_swapChainImageFormat;
-		colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
-		colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		colorAttachmentResolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		colorAttachmentResolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		colorAttachmentResolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		colorAttachmentResolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-		VkAttachmentReference colorAttachmentRef{};
-		colorAttachmentRef.attachment = 0;
-		colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-		VkAttachmentReference depthAttachmentRef{};
-		depthAttachmentRef.attachment = 1;
-		depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-		VkAttachmentReference colorAttachmentResolveRef{};
-		colorAttachmentResolveRef.attachment = 2;
-		colorAttachmentResolveRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-		VkSubpassDescription subpass{};
-		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpass.colorAttachmentCount = 1;
-		subpass.pColorAttachments = &colorAttachmentRef;
-		subpass.pDepthStencilAttachment = &depthAttachmentRef;
-		subpass.pResolveAttachments = &colorAttachmentResolveRef;
-
-		VkSubpassDependency dependency{};
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		dependency.srcAccessMask = 0;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-		std::array<VkAttachmentDescription, 3> attachments = { colorAttachment, depthAttachment, colorAttachmentResolve };
-		VkRenderPassCreateInfo renderPassInfo{};
-		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-		renderPassInfo.pAttachments = attachments.data();
-		renderPassInfo.subpassCount = 1;
-		renderPassInfo.pSubpasses = &subpass;
-		renderPassInfo.dependencyCount = 1;
-		renderPassInfo.pDependencies = &dependency;
-
-		if (vkCreateRenderPass(*m_device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create render pass!");
-		}
 	}
 
 	void createDescriptorSetLayout()
@@ -399,7 +326,7 @@ private:
 		pipelineInfo.pColorBlendState = &colorBlending;
 		pipelineInfo.pDynamicState = &dynamicState;
 		pipelineInfo.layout = pipelineLayout;
-		pipelineInfo.renderPass = renderPass;
+		pipelineInfo.renderPass = *m_renderPass;
 		pipelineInfo.subpass = 0;
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
@@ -942,7 +869,7 @@ private:
 
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = renderPass;
+		renderPassInfo.renderPass = *m_renderPass;
 		renderPassInfo.framebuffer = m_swapChain.m_swapChainFramebuffers[imageIndex];
 		renderPassInfo.renderArea.offset = { 0,0 };
 		renderPassInfo.renderArea.extent = m_swapChain.m_swapChainExtent;
@@ -1014,7 +941,7 @@ private:
 			imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-			m_swapChain.recreateSwapChain(m_device, **m_window, m_window.m_surface, renderPass);
+			m_swapChain.recreateSwapChain(m_device, **m_window, m_window.m_surface, *m_renderPass);
 			return;
 		}
 		else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
@@ -1060,7 +987,7 @@ private:
 		result = vkQueuePresentKHR(m_device.m_presentQueue, &presentInfo);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
 			framebufferResized = false;
-			m_swapChain.recreateSwapChain(m_device, **m_window, m_window.m_surface, renderPass);
+			m_swapChain.recreateSwapChain(m_device, **m_window, m_window.m_surface, *m_renderPass);
 		}
 		else if (result != VK_SUCCESS) {
 			throw std::runtime_error("failed to present swap chain image");
