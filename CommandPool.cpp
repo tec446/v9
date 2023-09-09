@@ -130,3 +130,28 @@ void CommandPool::endSingleTimeCommands(Device& device, VkCommandBuffer commandB
 
 	vkFreeCommandBuffers(*device, m_commandPool, 1, &commandBuffer);
 } // endSingleTimeCommands()
+
+void CommandPool::createSyncObjects
+(
+	VkDevice& logicalDevice,
+	const int maxFramesInFlight
+)
+{
+	m_imageAvailableSemaphores.resize(maxFramesInFlight);
+	m_renderFinishedSemaphores.resize(maxFramesInFlight);
+	m_inFlightFences.resize(maxFramesInFlight);
+
+	VkSemaphoreCreateInfo semaphoreInfo{};
+	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+	VkFenceCreateInfo fenceInfo{};
+	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+	for (size_t i = 0; i < maxFramesInFlight; i++) {
+		if (vkCreateSemaphore(logicalDevice, &semaphoreInfo, nullptr, &m_imageAvailableSemaphores[i]) != VK_SUCCESS ||
+			vkCreateSemaphore(logicalDevice, &semaphoreInfo, nullptr, &m_renderFinishedSemaphores[i]) != VK_SUCCESS ||
+			vkCreateFence(logicalDevice, &fenceInfo, nullptr, &m_inFlightFences[i]) != VK_SUCCESS) {
+			throw std::runtime_error("failed to create synchronization objects for a frame!");
+		}
+	}
+} // createSyncObjects()

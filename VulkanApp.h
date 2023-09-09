@@ -261,13 +261,7 @@ private:
 		m_swapChain.createImageViews(m_device);
 		m_renderPass.createRenderPass(m_device, m_swapChain);
 		m_descriptorSets.createDescriptorSetLayout(*m_device);
-		m_pipeline.createGraphicsPipeline(
-			m_device, 
-			m_descriptorSets.m_descriptorSetLayout, 
-			*m_renderPass,
-			m_pipeline.m_pipelineLayout,
-			m_pipeline.m_pipeline
-			);
+		m_pipeline.createGraphicsPipeline(m_device, m_descriptorSets.m_descriptorSetLayout, *m_renderPass, m_pipeline.m_pipelineLayout,	m_pipeline.m_pipeline);
 		m_commandPool.createCommandPool(m_device, m_window.m_surface);
 		m_swapChain.createColorResources(m_device, m_swapChain);
 		m_swapChain.createDepthResources(m_device, m_swapChain);
@@ -282,7 +276,7 @@ private:
 		m_descriptorSets.createDescriptorPool(*m_device);
 		m_descriptorSets.createDescriptorSets(*m_device, uniformBuffers, m_textureImage.m_textureImageView, m_textureImage.m_textureSampler);
 		m_commandPool.createCommandBuffers(m_device, m_descriptorSets.m_maxFramesInFlight);
-		createSyncObjects();
+		m_commandPool.createSyncObjects(*m_device, m_descriptorSets.m_maxFramesInFlight);
 	}
 
 	void mainLoop()
@@ -816,26 +810,6 @@ private:
 		ubo.proj[1][1] *= -1;
 
 		memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
-	}
-
-	void createSyncObjects() {
-		m_commandPool.m_imageAvailableSemaphores.resize(m_descriptorSets.m_maxFramesInFlight);
-		m_commandPool.m_renderFinishedSemaphores.resize(m_descriptorSets.m_maxFramesInFlight);
-		m_commandPool.m_inFlightFences.resize(m_descriptorSets.m_maxFramesInFlight);
-
-		VkSemaphoreCreateInfo semaphoreInfo{};
-		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-		VkFenceCreateInfo fenceInfo{};
-		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-		for (size_t i = 0; i < m_descriptorSets.m_maxFramesInFlight; i++) {
-			if (vkCreateSemaphore(*m_device, &semaphoreInfo, nullptr, &m_commandPool.m_imageAvailableSemaphores[i]) != VK_SUCCESS ||
-				vkCreateSemaphore(*m_device, &semaphoreInfo, nullptr, &m_commandPool.m_renderFinishedSemaphores[i]) != VK_SUCCESS ||
-				vkCreateFence(*m_device, &fenceInfo, nullptr, &m_commandPool.m_inFlightFences[i]) != VK_SUCCESS) {
-				throw std::runtime_error("failed to create synchronization objects for a frame!");
-			}
-		}
 	}
 
 }; // class VulkanApp

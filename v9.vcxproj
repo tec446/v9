@@ -144,6 +144,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Buffer.cpp" />
+    <ClCompile Include="Buffers.cpp" />
     <ClCompile Include="CommandPool.cpp" />
     <ClCompile Include="DebugMessenger.cpp" />
     <ClCompile Include="DescriptorSets.cpp" />
@@ -165,6 +166,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Buffer.h" />
+    <ClInclude Include="Buffers.h" />
     <ClInclude Include="CommandPool.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="DebugMessenger.h" />
