@@ -1,11 +1,11 @@
 #include "Pipeline.h"
 
 void Pipeline::createGraphicsPipeline(
-	Device& device, 
-	VkDescriptorSetLayout& descriptorSetLayout, 
-	VkRenderPass& renderPass,
-	VkPipelineLayout& pipelineLayout,
-	VkPipeline&       pipeline
+	Device& device,
+	VkDescriptorSetLayout& descriptorSetLayout,
+	VkRenderPass& renderPass//,
+//	VkPipelineLayout& pipelineLayout,
+//	VkPipeline& pipeline
 )
 {
 	auto vertShaderCode = IO::readFile(TempMagicValues::VERT_SHADER_PATH);
@@ -28,12 +28,11 @@ void Pipeline::createGraphicsPipeline(
 
 	VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
-	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-
 	auto bindingDescription = Vertex::getBindingDescription();
 	auto attributeDescriptions = Vertex::getAttributeDescriptions();
 
+	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 	vertexInputInfo.vertexBindingDescriptionCount = 1;
 	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
 	vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
@@ -102,9 +101,8 @@ void Pipeline::createGraphicsPipeline(
 	pipelineLayoutInfo.setLayoutCount = 1;
 	pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 
-	if (vkCreatePipelineLayout(*device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create pipeline layout!");
-	}
+	if (vkCreatePipelineLayout(*device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS) {
+		throw std::runtime_error("failed to create pipeline layout!"); }
 
 	VkGraphicsPipelineCreateInfo pipelineInfo{};
 	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -118,22 +116,20 @@ void Pipeline::createGraphicsPipeline(
 	pipelineInfo.pDepthStencilState = &depthStencil;
 	pipelineInfo.pColorBlendState = &colorBlending;
 	pipelineInfo.pDynamicState = &dynamicState;
-	pipelineInfo.layout = pipelineLayout;
+	pipelineInfo.layout = m_pipelineLayout;
 	pipelineInfo.renderPass = renderPass;
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-	if (vkCreateGraphicsPipelines(*device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create graphics pipeline!");
-	}
+	if (vkCreateGraphicsPipelines(*device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline) != VK_SUCCESS) {
+		throw std::runtime_error("failed to create graphics pipeline!"); }
 
 	vkDestroyShaderModule(*device, fragShaderModule, nullptr);
 	vkDestroyShaderModule(*device, vertShaderModule, nullptr);
 
 } // createGraphicsPipeline()
 
-auto Pipeline::createShaderModule(Device& device, const std::vector<char>& code) -> VkShaderModule
-{
+auto Pipeline::createShaderModule(Device& device, const std::vector<char>& code) -> VkShaderModule {
 	VkShaderModuleCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 	createInfo.codeSize = code.size();
@@ -141,8 +137,96 @@ auto Pipeline::createShaderModule(Device& device, const std::vector<char>& code)
 
 	VkShaderModule shaderModule;
 	if (vkCreateShaderModule(*device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create shader module!"); }
+		throw std::runtime_error("failed to create shader module!");
+	}
 
 	return shaderModule;
 
 } // createShaderModule()
+
+void Pipeline::createUniformBuffers(
+	Device& device,
+	int maxFramesInFlight
+)
+{
+	VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+
+	m_uniformBuffers.resize(maxFramesInFlight);
+	m_uniformBuffersMemory.resize(maxFramesInFlight);
+	m_uniformBuffersMapped.resize(maxFramesInFlight);
+
+	for (size_t i = 0; i < maxFramesInFlight; i++)
+	{
+		Buffer::create(device, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_uniformBuffers[i], m_uniformBuffersMemory[i]);
+
+		vkMapMemory(*device, m_uniformBuffersMemory[i], 0, bufferSize, 0, &m_uniformBuffersMapped[i]);
+	}
+} // createUniformBuffers()
+
+void Pipeline::createVertexBuffer(
+	Device& device,
+	CommandPool& commandPool
+)
+{
+	VkDeviceSize bufferSize = sizeof(commandPool.m_vertices[0]) * commandPool.m_vertices.size();
+
+	VkBuffer stagingBuffer;
+	VkDeviceMemory stagingBufferMemory;
+	Buffer::create(device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+	void* data;
+	vkMapMemory(*device, stagingBufferMemory, 0, bufferSize, 0, &data);
+	memcpy(data, commandPool.m_vertices.data(), (size_t)bufferSize);
+	vkUnmapMemory(*device, stagingBufferMemory);
+
+	Buffer::create(device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, commandPool.m_vertexBuffer, commandPool.m_vertexBufferMemory);
+
+	Buffer::copy(device, commandPool, stagingBuffer, commandPool.m_vertexBuffer, bufferSize);
+
+	vkDestroyBuffer(*device, stagingBuffer, nullptr);
+	vkFreeMemory(*device, stagingBufferMemory, nullptr);
+} // createVertexBuffer()
+
+void Pipeline::createIndexBuffer(
+	Device& device,
+	CommandPool& commandPool
+)
+{
+	VkDeviceSize bufferSize = sizeof(commandPool.m_indices[0]) * commandPool.m_indices.size();
+
+	VkBuffer stagingBuffer;
+	VkDeviceMemory stagingBufferMemory;
+	Buffer::create(device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+	void* data;
+	vkMapMemory(*device, stagingBufferMemory, 0, bufferSize, 0, &data);
+	memcpy(data, commandPool.m_indices.data(), (size_t)bufferSize);
+	vkUnmapMemory(*device, stagingBufferMemory);
+
+	Buffer::create(device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, commandPool.m_indexBuffer, commandPool.m_indexBufferMemory);
+
+	Buffer::copy(device, commandPool, stagingBuffer, commandPool.m_indexBuffer, bufferSize);
+
+	vkDestroyBuffer(*device, stagingBuffer, nullptr);
+	vkFreeMemory(*device, stagingBufferMemory, nullptr);
+} // createIndexBuffer()
+
+void Pipeline::vkUpdateUniformBuffer(SwapChain& swapChain, uint32_t currentImage) {
+	static auto startTime = std::chrono::high_resolution_clock::now();
+
+	auto currentTime = std::chrono::high_resolution_clock::now();
+	float time = std::chrono::duration<float, std::chrono::seconds::period>
+		(currentTime - startTime).count();
+
+	UniformBufferObject ubo{};
+	ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f),
+		glm::vec3(0.0f, 0.0f, 1.0f));
+	ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f),
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 0.0f, 1.0f));
+	ubo.proj = glm::perspective(glm::radians(45.0f),
+		swapChain.m_swapChainExtent.width / (float)swapChain.m_swapChainExtent.height, 0.1f, 10.0f);
+	ubo.proj[1][1] *= -1;
+
+	memcpy(m_uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
+} // vkUpdateUniformBuffer()
