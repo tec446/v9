@@ -143,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Buffer.cpp" />
     <ClCompile Include="CommandPool.cpp" />
     <ClCompile Include="DebugMessenger.cpp" />
     <ClCompile Include="DescriptorSets.cpp" />
@@ -153,6 +154,7 @@
     <ClCompile Include="Pipeline.cpp" />
     <ClCompile Include="RenderPass.cpp" />
     <ClCompile Include="SwapChain.cpp" />
+    <ClCompile Include="TextureImage.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -162,6 +164,7 @@
     <None Include="shader.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Buffer.h" />
     <ClInclude Include="CommandPool.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="DebugMessenger.h" />
@@ -172,6 +175,7 @@
     <ClInclude Include="RenderPass.h" />
     <ClInclude Include="SwapChain.h" />
     <ClInclude Include="TempMagicValues.h" />
+    <ClInclude Include="TextureImage.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="Types.h" />
     <ClInclude Include="VulkanApp.h" />

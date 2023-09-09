@@ -2,7 +2,7 @@
 
 #include <unordered_map>
 #include <tiny_obj_loader.h>
-#include <stb_image.h>
+//#include <stb_image.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -36,6 +36,8 @@
 #include "IO.h"
 #include "Pipeline.h"
 #include "CommandPool.h"
+#include "Buffer.h"
+#include "TextureImage.h"
 
 const uint32_t WIDTH{ 800 };
 const uint32_t HEIGHT{ 600 };
@@ -216,6 +218,7 @@ private:
 	RenderPass     m_renderPass;
 	DescriptorSets m_descriptorSets;
 	CommandPool    m_commandPool;
+	TextureImage   m_textureImage;
 	//Pipeline       m_pipeline;
 	//
 	static void framebufferResizeCallbackLambda(GLFWwindow* window, int width, int height) {
@@ -235,11 +238,11 @@ private:
 	//VkDescriptorPool m_descriptorSets.m_descriptorPool;
 	//std::vector<VkDescriptorSet> descriptorSets;
 
-	uint32_t mipLevels;
-	VkImage textureImage;
-	VkDeviceMemory textureImageMemory;
-	VkImageView textureImageView;
-	VkSampler textureSampler;
+	//uint32_t mipLevels;
+	//VkImage textureImage;
+	//VkDeviceMemory textureImageMemory;
+	//VkImageView textureImageView;
+	//VkSampler textureSampler;
 
 	bool framebufferResized = false;
 	////////////////////////
@@ -269,15 +272,15 @@ private:
 		m_swapChain.createColorResources(m_device, m_swapChain);
 		m_swapChain.createDepthResources(m_device, m_swapChain);
 		m_swapChain.createFramebuffers(m_device, *m_renderPass);
-		createTextureImage();
-		createTextureImageView();
-		createTextureSampler();
+		m_textureImage.createTextureImage(m_device, m_commandPool, m_swapChain);
+		m_textureImage.createTextureImageView(m_device, m_swapChain);
+		m_textureImage.createTextureSampler(m_device);
 		loadModel();
 		createVertexBuffer();
 		createIndexBuffer();
 		createUniformBuffers();
 		m_descriptorSets.createDescriptorPool(*m_device);
-		m_descriptorSets.createDescriptorSets(*m_device, uniformBuffers, textureImageView, textureSampler);
+		m_descriptorSets.createDescriptorSets(*m_device, uniformBuffers, m_textureImage.m_textureImageView, m_textureImage.m_textureSampler);
 		m_commandPool.createCommandBuffers(m_device, m_descriptorSets.m_maxFramesInFlight);
 		createSyncObjects();
 	}
@@ -297,10 +300,10 @@ private:
 	{
 		m_swapChain.cleanupSwapChain(*m_device);
 
-		vkDestroySampler(*m_device, textureSampler, nullptr);
-		vkDestroyImageView(*m_device, textureImageView, nullptr);
-		vkDestroyImage(*m_device, textureImage, nullptr);
-		vkFreeMemory(*m_device, textureImageMemory, nullptr);
+		vkDestroySampler(*m_device, m_textureImage.m_textureSampler, nullptr);
+		vkDestroyImageView(*m_device, m_textureImage.m_textureImageView, nullptr);
+		vkDestroyImage(*m_device, m_textureImage.m_textureImage, nullptr);
+		vkFreeMemory(*m_device, m_textureImage.m_textureImageMemory, nullptr);
 
 		for (size_t i = 0; i < m_descriptorSets.m_maxFramesInFlight; i++)
 		{
@@ -348,7 +351,7 @@ private:
 	{
 		return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
 	}
-
+	/*
 	void createTextureImage()
 	{
 		int texWidth, texHeight, texChannels;
@@ -473,7 +476,8 @@ private:
 
 		m_commandPool.endSingleTimeCommands(m_device, commandBuffer);
 	}
-
+	*/
+	/*
 	void createTextureImageView()
 	{
 		textureImageView = m_swapChain.createImageView(m_device, textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels);
@@ -560,7 +564,7 @@ private:
 
 		m_commandPool.endSingleTimeCommands(m_device, commandBuffer);
 	}
-
+	
 	void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
 	{
 		VkCommandBuffer commandBuffer = m_commandPool.beginSingleTimeCommands(m_device);
@@ -584,6 +588,8 @@ private:
 
 		m_commandPool.endSingleTimeCommands(m_device, commandBuffer);
 	}
+	*/
+	
 
 	void loadModel()
 	{
@@ -635,16 +641,16 @@ private:
 
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
-		createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+		Buffer::create(m_device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
 		void* data;
 		vkMapMemory(*m_device, stagingBufferMemory, 0, bufferSize, 0, &data);
 		memcpy(data, m_commandPool.m_vertices.data(), (size_t)bufferSize);
 		vkUnmapMemory(*m_device, stagingBufferMemory);
 
-		createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_commandPool.m_vertexBuffer, m_commandPool.m_vertexBufferMemory);
+		Buffer::create(m_device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_commandPool.m_vertexBuffer, m_commandPool.m_vertexBufferMemory);
 
-		copyBuffer(stagingBuffer, m_commandPool.m_vertexBuffer, bufferSize);
+		Buffer::copy(m_device, m_commandPool, stagingBuffer, m_commandPool.m_vertexBuffer, bufferSize);
 
 		vkDestroyBuffer(*m_device, stagingBuffer, nullptr);
 		vkFreeMemory(*m_device, stagingBufferMemory, nullptr);
@@ -656,16 +662,16 @@ private:
 
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
-		createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+		Buffer::create(m_device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
 		void* data;
 		vkMapMemory(*m_device, stagingBufferMemory, 0, bufferSize, 0, &data);
 		memcpy(data, m_commandPool.m_indices.data(), (size_t)bufferSize);
 		vkUnmapMemory(*m_device, stagingBufferMemory);
 
-		createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_commandPool.m_indexBuffer, m_commandPool.m_indexBufferMemory);
+		Buffer::create(m_device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_commandPool.m_indexBuffer, m_commandPool.m_indexBufferMemory);
 
-		copyBuffer(stagingBuffer, m_commandPool.m_indexBuffer, bufferSize);
+		Buffer::copy(m_device, m_commandPool, stagingBuffer, m_commandPool.m_indexBuffer, bufferSize);
 
 		vkDestroyBuffer(*m_device, stagingBuffer, nullptr);
 		vkFreeMemory(*m_device, stagingBufferMemory, nullptr);
@@ -681,12 +687,12 @@ private:
 
 		for (size_t i = 0; i < m_descriptorSets.m_maxFramesInFlight; i++)
 		{
-			createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
+			Buffer::create(m_device, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
 
 			vkMapMemory(*m_device, uniformBuffersMemory[i], 0, bufferSize, 0, &uniformBuffersMapped[i]);
 		}
 	}
-
+	/*
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
 	{
 		VkBufferCreateInfo bufferInfo{};
@@ -726,6 +732,7 @@ private:
 
 		m_commandPool.endSingleTimeCommands(m_device, commandBuffer);
 	}
+	*/
 
 	void drawFrame() {
 		vkWaitForFences(*m_device, 1, &m_commandPool.m_inFlightFences[m_commandPool.m_currentFrame], VK_TRUE, UINT64_MAX);
