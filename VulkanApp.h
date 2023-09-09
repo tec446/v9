@@ -45,18 +45,264 @@ const uint32_t HEIGHT{ 600 };
 class TestPipeline
 {
 public:
-	VkPipelineLayout m_pipelineLayout{};
-	VkPipeline		 m_pipeline{};
+	//VkPipelineLayout m_pipelineLayout{};
+	//VkPipeline		 m_pipeline{};
 
 	std::vector<VkBuffer>		m_uniformBuffers;
 	std::vector<VkDeviceMemory> m_uniformBuffersMemory;
 	std::vector<void*>			m_uniformBuffersMapped;
 
+	const Device* m_device;
+	VkPipelineLayout m_pipelineLayout;
+	VkPipeline m_pipeline;
 
+	/*
+	TestPipeline(
+		const Device* device,
+		const SwapChain* swapChain,
+		const RenderPass* renderPass,
+		const DescriptorSets* descriptorSets
+	);
+
+	void createPipeline(
+		const SwapChain* swapChain,
+		const RenderPass* renderPass,
+		const DescriptorSets* descriptorSets
+	);
+
+	static std::vector<char> readFile(const std::string& filename);
+
+	VkShaderModule createShaderModule(const std::vector<char>& code);
+	*/
+
+	TestPipeline(
+		const Device* device,
+		const SwapChain* swapChain,
+		const RenderPass* renderPass,
+		const DescriptorSets* descriptorSets
+	) : m_device{ device }
+	{
+		createPipeline(swapChain, renderPass, descriptorSets);
+	} // TestPipeline()
+
+	void createPipeline(
+		const SwapChain* swapChain,
+		const RenderPass* renderPass,
+		const DescriptorSets* descriptorSets
+	)
+	{
+		// get shader code & convert it
+		auto vertShaderCode = readFile(TempMagicValues::VERT_SHADER_PATH);
+		auto fragShaderCode = readFile(TempMagicValues::FRAG_SHADER_PATH);
+		VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
+		VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+
+		VkPipelineShaderStageCreateInfo vertShaderStageInfo{}; {
+			vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+			vertShaderStageInfo.module = vertShaderModule;
+			vertShaderStageInfo.pName = "main";
+		} // vertShaderStageInfo
+
+		VkPipelineShaderStageCreateInfo fragShaderStageInfo{}; {
+			fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+			fragShaderStageInfo.module = fragShaderModule;
+			fragShaderStageInfo.pName = "main";
+		} // fragShaderStageInfo
+
+		// info for all shader stages
+		VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
+
+		auto bindingDescription    = Vertex::getBindingDescription();
+		auto attributeDescriptions = Vertex::getAttributeDescriptions();
+
+		// info for how vertex data is loaded into the vertex shader
+		VkPipelineVertexInputStateCreateInfo vertexInputInfo{}; {
+			vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+			vertexInputInfo.vertexBindingDescriptionCount = 1;
+			vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+			vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+			vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+		} // vertexInputInfo
+
+		// info on what kind of geometry will be drawn, IE: triangles, lines, etc...
+		VkPipelineInputAssemblyStateCreateInfo inputAssembly{}; {
+			inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+			inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+			inputAssembly.primitiveRestartEnable = VK_FALSE;
+		} // inputAssembly
+
+		// get swap extent from swap chain, needed for viewport
+		const VkExtent2D& swapExtent{ swapChain->m_swapChainExtent };
+
+		// info on viewport size, depth, and offset
+		VkViewport viewport{}; {
+			viewport.x = 0.0f;
+			viewport.y = 0.0f;
+			viewport.width = (float)swapExtent.width;
+			viewport.height = (float)swapExtent.height;
+			viewport.minDepth = 0.0f;
+			viewport.maxDepth = 1.0f;
+		} // viewport
+
+		// info about clipping
+		VkRect2D scissor{}; {
+			scissor.offset = { 0, 0 };
+			scissor.extent = swapExtent;
+		} // scissor
+
+		// combined info on viewport and scissor
+		VkPipelineViewportStateCreateInfo viewportState{}; {
+			viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+			viewportState.viewportCount = 1;
+			viewportState.pViewports = &viewport;
+			viewportState.scissorCount = 1;
+			viewportState.pScissors = &scissor;
+		} // viewportState
+
+		// rasterization stage info
+		VkPipelineRasterizationStateCreateInfo rasterizer{}; {
+			rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+			rasterizer.depthClampEnable = VK_FALSE;
+			rasterizer.rasterizerDiscardEnable = VK_FALSE;
+			rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+			rasterizer.lineWidth = 1.0f;
+			rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+			rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+			rasterizer.depthBiasEnable = VK_FALSE;
+		} // rasterizer
+
+		// multisampling info
+		VkPipelineMultisampleStateCreateInfo multisampling{}; {
+			multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+			multisampling.sampleShadingEnable = VK_FALSE;
+			multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+		} // multisampling
+
+		// depth stencil
+		VkPipelineDepthStencilStateCreateInfo depthStencil{}; {
+			depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+			depthStencil.depthTestEnable = VK_TRUE;
+			depthStencil.depthWriteEnable = VK_TRUE;
+			depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+			depthStencil.depthBoundsTestEnable = VK_FALSE;
+			depthStencil.minDepthBounds = 0.0f; // optional
+			depthStencil.maxDepthBounds = 1.0f; // optional
+			depthStencil.stencilTestEnable = VK_FALSE;
+			depthStencil.front = {};	// optional
+			depthStencil.back = {};	//optional
+		} // depthStencil
+
+		// color blending info
+		VkPipelineColorBlendAttachmentState colorBlendAttachment{}; {
+			colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT
+				| VK_COLOR_COMPONENT_G_BIT
+				| VK_COLOR_COMPONENT_B_BIT
+				| VK_COLOR_COMPONENT_A_BIT;
+			colorBlendAttachment.blendEnable = VK_FALSE;
+		} // colorBlendAttachment
+
+		VkPipelineColorBlendStateCreateInfo colorBlending{}; {
+			colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+			colorBlending.logicOpEnable = VK_FALSE;
+			colorBlending.logicOp = VK_LOGIC_OP_COPY;
+			colorBlending.attachmentCount = 1;
+			colorBlending.pAttachments = &colorBlendAttachment;
+			colorBlending.blendConstants[0] = 0.0f;
+			colorBlending.blendConstants[1] = 0.0f;
+			colorBlending.blendConstants[2] = 0.0f;
+			colorBlending.blendConstants[3] = 0.0f;
+		} // colorBlending
+
+		VkPushConstantRange pushConstantRange{};
+		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		pushConstantRange.offset = 0;
+		pushConstantRange.size = sizeof(PushConstantData);
+
+		// pipeline layout
+		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		pipelineLayoutInfo.setLayoutCount = 1;
+		pipelineLayoutInfo.pSetLayouts = &descriptorSets->m_descriptorSetLayout;
+		pipelineLayoutInfo.pushConstantRangeCount = 1;
+		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
+		if (vkCreatePipelineLayout(m_device->m_logical, &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create pipeline layout!");
+		}
+
+		// Pipeline creation info
+		VkGraphicsPipelineCreateInfo pipelineInfo{};
+		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+		pipelineInfo.stageCount = 2;
+		pipelineInfo.pStages = shaderStages;
+		pipelineInfo.pVertexInputState = &vertexInputInfo;
+		pipelineInfo.pInputAssemblyState = &inputAssembly;
+		pipelineInfo.pViewportState = &viewportState;
+		pipelineInfo.pRasterizationState = &rasterizer;
+		pipelineInfo.pMultisampleState = &multisampling;
+		pipelineInfo.pDepthStencilState = &depthStencil;
+		pipelineInfo.pColorBlendState = &colorBlending;
+		pipelineInfo.pDynamicState = nullptr;
+		pipelineInfo.layout = m_pipelineLayout;
+		pipelineInfo.renderPass = renderPass->m_renderPass;
+		pipelineInfo.subpass = 0;
+		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+		pipelineInfo.basePipelineIndex = -1;
+
+		if (vkCreateGraphicsPipelines(m_device->m_logical, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create graphics pipeline!");
+		}
+
+		// shaders are loaded and the modules are no longer required
+		vkDestroyShaderModule(m_device->m_logical, fragShaderModule, nullptr);
+		vkDestroyShaderModule(m_device->m_logical, vertShaderModule, nullptr);
+	}
+
+	std::vector<char> readFile(const std::string& filename)
+	{
+		// read in file and start from the end to get file size
+		std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+		// throw error if file wasn't opened successfully
+		if (!file.is_open())
+		{
+			throw std::runtime_error("failed to open file!");
+		}
+
+		size_t fileSize = (size_t)file.tellg();	// get file size
+		std::vector<char> buffer(fileSize);		// create buffer to hold code
+		file.seekg(0);							// start from beginning of file
+		file.read(buffer.data(), fileSize);		// copy data to buffer
+		file.close();
+
+		return buffer;
+	}
+
+	VkShaderModule createShaderModule(const std::vector<char>& code) {
+		VkShaderModuleCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+		createInfo.codeSize = code.size();
+		createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+
+		VkShaderModule shaderModule;
+		if (vkCreateShaderModule(m_device->m_logical, &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create shader module!");
+		}
+
+		return shaderModule;
+
+	}
+
+	/*
 	void createGraphicsPipeline(
-		Device& device,
-		VkDescriptorSetLayout& descriptorSetLayout,
-		VkRenderPass& renderPass//,
+		const Device& device,
+		const VkDescriptorSetLayout& descriptorSetLayout,
+		const VkRenderPass& renderPass//,
 //		VkPipelineLayout& pipelineLayout,
 //		VkPipeline& pipeline
 	)
@@ -155,7 +401,7 @@ public:
 		pipelineLayoutInfo.setLayoutCount = 1;
 		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 
-		if (vkCreatePipelineLayout(*device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS) {
+		if (vkCreatePipelineLayout(device.m_logical, &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create pipeline layout!"); }
 
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
@@ -175,15 +421,15 @@ public:
 		pipelineInfo.subpass = 0;
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-		if (vkCreateGraphicsPipelines(*device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline) != VK_SUCCESS) {
+		if (vkCreateGraphicsPipelines(device.m_logical, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create graphics pipeline!"); }
 
-		vkDestroyShaderModule(*device, fragShaderModule, nullptr);
-		vkDestroyShaderModule(*device, vertShaderModule, nullptr);
+		vkDestroyShaderModule(device.m_logical, fragShaderModule, nullptr);
+		vkDestroyShaderModule(device.m_logical, vertShaderModule, nullptr);
 
 	} // createGraphicsPipeline()
 
-	static auto createShaderModule(Device& device, const std::vector<char>& code) -> VkShaderModule
+	static auto createShaderModule(const Device& device, const std::vector<char>& code) -> VkShaderModule
 	{
 		VkShaderModuleCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -191,16 +437,14 @@ public:
 		createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
 		VkShaderModule shaderModule;
-		if (vkCreateShaderModule(*device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create shader module!");
-		}
+		if (vkCreateShaderModule(device.m_logical, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+			throw std::runtime_error("failed to create shader module!"); }
 
 		return shaderModule;
-
 	} // createShaderModule()
 
 	auto operator*() -> VkPipeline { return m_pipeline; }
-
+	*/
 	/////////////////
 	void createUniformBuffers(
 		Device& device,
@@ -293,6 +537,8 @@ public:
 ////////////////////////////////////////////////////////////////////////////
 class HelloTriangleApplication {
 public:
+	HelloTriangleApplication() = default;
+
 	void run() {
 		m_window.initWindow(framebufferResizeCallback);
 		initVulkan();
@@ -310,7 +556,7 @@ private:
 	DescriptorSets m_descriptorSets;
 	CommandPool    m_commandPool;
 	TextureImage   m_textureImage;
-	TestPipeline m_pipeline;
+	std::unique_ptr<TestPipeline> m_pipeline;
 	//
 	static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
 		reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window)) -> m_framebufferResized = true;
@@ -330,13 +576,12 @@ private:
 		m_swapChain.createImageViews(m_device);
 		m_renderPass.createRenderPass(m_device, m_swapChain);
 		m_descriptorSets.createDescriptorSetLayout(*m_device);
-		m_pipeline.createGraphicsPipeline(
-			m_device, 
-			m_descriptorSets.m_descriptorSetLayout, 
-			*m_renderPass//, 
-			//m_pipeline.m_pipelineLayout,	
-			//m_pipeline.m_pipeline
-		);
+		m_pipeline = std::make_unique<TestPipeline>(&m_device, &m_swapChain, &m_renderPass, &m_descriptorSets);
+//		m_pipeline.createPipeline(
+//			&m_swapChain,
+//			&m_renderPass,
+//			&m_descriptorSets
+//		);
 		m_commandPool.createCommandPool(m_device, m_window.m_surface);
 		m_swapChain.createColorResources(m_device, m_swapChain);
 		m_swapChain.createDepthResources(m_device, m_swapChain);
@@ -345,11 +590,11 @@ private:
 		m_textureImage.createTextureImageView(m_device, m_swapChain);
 		m_textureImage.createTextureSampler(m_device);
 		loadModel(m_commandPool.m_vertices, m_commandPool.m_indices);
-		m_pipeline.createVertexBuffer(m_device, m_commandPool);
-		m_pipeline.createIndexBuffer(m_device, m_commandPool);
-		m_pipeline.createUniformBuffers(m_device, m_descriptorSets.m_maxFramesInFlight);
+		m_pipeline->createVertexBuffer(m_device, m_commandPool);
+		m_pipeline->createIndexBuffer(m_device, m_commandPool);
+		m_pipeline->createUniformBuffers(m_device, m_descriptorSets.m_maxFramesInFlight);
 		m_descriptorSets.createDescriptorPool(*m_device);
-		m_descriptorSets.createDescriptorSets(*m_device, m_pipeline.m_uniformBuffers, m_textureImage.m_textureImageView, m_textureImage.m_textureSampler);
+		m_descriptorSets.createDescriptorSets(*m_device, m_pipeline->m_uniformBuffers, m_textureImage.m_textureImageView, m_textureImage.m_textureSampler);
 		m_commandPool.createCommandBuffers(m_device, m_descriptorSets.m_maxFramesInFlight);
 		m_commandPool.createSyncObjects(*m_device, m_descriptorSets.m_maxFramesInFlight);
 	}
@@ -376,8 +621,8 @@ private:
 
 		for (size_t i = 0; i < m_descriptorSets.m_maxFramesInFlight; i++)
 		{
-			vkDestroyBuffer(*m_device, m_pipeline.m_uniformBuffers[i], nullptr);
-			vkFreeMemory(*m_device, m_pipeline.m_uniformBuffersMemory[i], nullptr);
+			vkDestroyBuffer(*m_device, m_pipeline->m_uniformBuffers[i], nullptr);
+			vkFreeMemory(*m_device, m_pipeline->m_uniformBuffersMemory[i], nullptr);
 		}
 
 		vkDestroyDescriptorPool(*m_device, m_descriptorSets.m_descriptorPool, nullptr);
@@ -389,8 +634,8 @@ private:
 		vkDestroyBuffer(*m_device, m_commandPool.m_vertexBuffer, nullptr);
 		vkFreeMemory(*m_device, m_commandPool.m_vertexBufferMemory, nullptr);
 
-		vkDestroyPipeline(*m_device, m_pipeline.m_pipeline, nullptr);
-		vkDestroyPipelineLayout(*m_device, m_pipeline.m_pipelineLayout, nullptr);
+		vkDestroyPipeline(*m_device, m_pipeline->m_pipeline, nullptr);
+		vkDestroyPipelineLayout(*m_device, m_pipeline->m_pipelineLayout, nullptr);
 
 		vkDestroyRenderPass(*m_device, *m_renderPass, nullptr);
 
@@ -437,11 +682,11 @@ private:
 		// Only reset fence when submitting work
 		vkResetFences(*m_device, 1, &m_commandPool.m_inFlightFences[m_commandPool.m_currentFrame]);
 
-		m_pipeline.vkUpdateUniformBuffer(m_swapChain, m_commandPool.m_currentFrame);
+		m_pipeline->vkUpdateUniformBuffer(m_swapChain, m_commandPool.m_currentFrame);
 
 		vkResetCommandBuffer(m_commandPool.m_commandBuffers[m_commandPool.m_currentFrame], 0);
 
-		m_commandPool.recordCommandBuffer(m_commandPool.m_commandBuffers[m_commandPool.m_currentFrame], *m_descriptorSets, m_pipeline.m_pipeline, m_pipeline.m_pipelineLayout, *m_renderPass, imageIndex, m_swapChain.m_swapChainFramebuffers, m_swapChain.m_swapChainExtent);
+		m_commandPool.recordCommandBuffer(m_commandPool.m_commandBuffers[m_commandPool.m_currentFrame], *m_descriptorSets, m_pipeline->m_pipeline, m_pipeline->m_pipelineLayout, *m_renderPass, imageIndex, m_swapChain.m_swapChainFramebuffers, m_swapChain.m_swapChainExtent);
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 

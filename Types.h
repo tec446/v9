@@ -86,4 +86,10 @@ struct UniformBufferObject {
 	alignas(16) glm::mat4 proj;
 };
 
-
+struct PushConstantData
+{
+	/**
+	 * Transform matrix, used to calculate 3D position
+	 */
+	glm::mat4 transform;
+};
