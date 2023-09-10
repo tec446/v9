@@ -14,28 +14,36 @@
 #include "Device.h"
 #include "IO.h"
 #include "Buffer.h"
+#include "RenderPass.h"
+#include "DescriptorPool.h"
 
 class Pipeline
 {
 public:
-	VkPipelineLayout m_pipelineLayout{};
-	VkPipeline		 m_pipeline{};
+	const Device*    m_device;
+	VkPipelineLayout m_pipelineLayout;
+	VkPipeline		 m_pipeline;
 
 	std::vector<VkBuffer>		m_uniformBuffers;
 	std::vector<VkDeviceMemory> m_uniformBuffersMemory;
 	std::vector<void*>			m_uniformBuffersMapped;
 
-	void createGraphicsPipeline(
-		Device& device, 
-		VkDescriptorSetLayout& descriptorSetLayout, 
-		VkRenderPass& renderPass//,
-//		VkPipelineLayout& pipelineLayout, 
-//		VkPipeline& pipeline
+	Pipeline(
+		const Device* device,
+		const SwapChain* swapChain,
+		const RenderPass* renderPass,
+		const DescriptorPool* descriptorPool
 	);
-	static auto createShaderModule(
-		Device& device, 
-		const std::vector<char>& code
-	) -> VkShaderModule;
+
+	void createPipeline(
+		const SwapChain* swapChain,
+		const RenderPass* renderPass,
+		const DescriptorPool* descriptorPool
+	);
+
+	std::vector<char> readFile(const std::string& filename);
+
+	auto createShaderModule(const std::vector<char>& code) -> VkShaderModule;
 
 	void createUniformBuffers(Device& device, int maxFramesInFlight);
 	void createVertexBuffer(Device& device, CommandPool& commandPool);

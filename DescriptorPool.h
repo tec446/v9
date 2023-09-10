@@ -7,7 +7,7 @@
 
 #include "Types.h"
 
-class DescriptorSets
+class DescriptorPool
 {
 public:
 	const int m_maxFramesInFlight = 2;
@@ -19,9 +19,5 @@ public:
 	void createDescriptorSetLayout(VkDevice& logicalDevice);
 	void createDescriptorPool(VkDevice& logicalDevice);
 	void createDescriptorSets(VkDevice& logicalDevice, std::vector<VkBuffer>& uniformBuffers, VkImageView& textureImageView, VkSampler& textureSampler);
-
-	// Allows us to use DescriptorSet as a pointer
-	auto operator*()		   -> std::vector<VkDescriptorSet>& { return m_descriptorSets; }
-	auto operator[](int index) -> VkDescriptorSet& { return m_descriptorSets[index]; }
 
 }; // class DescriptorSet

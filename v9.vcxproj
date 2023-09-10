@@ -144,15 +144,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Buffer.cpp" />
-    <ClCompile Include="Buffers.cpp" />
     <ClCompile Include="CommandPool.cpp" />
     <ClCompile Include="DebugMessenger.cpp" />
-    <ClCompile Include="DescriptorSets.cpp" />
+    <ClCompile Include="DescriptorPool.cpp" />
     <ClCompile Include="Instance.cpp" />
     <ClCompile Include="IO.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Device.cpp" />
     <ClCompile Include="Pipeline.cpp" />
+    <ClCompile Include="RenderObjects.cpp" />
     <ClCompile Include="RenderPass.cpp" />
     <ClCompile Include="SwapChain.cpp" />
     <ClCompile Include="TextureImage.cpp" />
@@ -166,14 +166,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Buffer.h" />
-    <ClInclude Include="Buffers.h" />
     <ClInclude Include="CommandPool.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="DebugMessenger.h" />
-    <ClInclude Include="DescriptorSets.h" />
+    <ClInclude Include="DescriptorPool.h" />
     <ClInclude Include="Device.h" />
     <ClInclude Include="Instance.h" />
     <ClInclude Include="Pipeline.h" />
+    <ClInclude Include="RenderObjects.h" />
     <ClInclude Include="RenderPass.h" />
     <ClInclude Include="SwapChain.h" />
     <ClInclude Include="TempMagicValues.h" />

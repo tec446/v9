@@ -39,7 +39,7 @@
     <ClCompile Include="RenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DescriptorSets.cpp">
+    <ClCompile Include="DescriptorPool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="IO.cpp">
@@ -57,7 +57,7 @@
     <ClCompile Include="Buffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Buffers.cpp">
+    <ClCompile Include="RenderObjects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -98,7 +98,7 @@
     <ClInclude Include="RenderPass.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="DescriptorSets.h">
+    <ClInclude Include="DescriptorPool.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Pipeline.h">
@@ -116,10 +116,10 @@
     <ClInclude Include="Buffer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Buffers.h">
+    <ClInclude Include="VulkanApp.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="VulkanApp.h">
+    <ClInclude Include="RenderObjects.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

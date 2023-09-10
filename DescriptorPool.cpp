@@ -1,6 +1,6 @@
-#include "DescriptorSets.h"
+#include "DescriptorPool.h"
 
-void DescriptorSets::createDescriptorSetLayout(VkDevice& logicalDevice)
+void DescriptorPool::createDescriptorSetLayout(VkDevice& logicalDevice)
 {
 	VkDescriptorSetLayoutBinding uboLayoutBinding{};
 	uboLayoutBinding.binding = 0;
@@ -27,7 +27,7 @@ void DescriptorSets::createDescriptorSetLayout(VkDevice& logicalDevice)
 
 } // createDescriptorSetLayout
 
-void DescriptorSets::createDescriptorSets(VkDevice& logicalDevice, std::vector<VkBuffer>& uniformBuffers, VkImageView& textureImageView, VkSampler& textureSampler)
+void DescriptorPool::createDescriptorSets(VkDevice& logicalDevice, std::vector<VkBuffer>& uniformBuffers, VkImageView& textureImageView, VkSampler& textureSampler)
 {
 	std::vector<VkDescriptorSetLayout> layouts(m_maxFramesInFlight, m_descriptorSetLayout);
 	VkDescriptorSetAllocateInfo allocInfo{};
@@ -74,7 +74,7 @@ void DescriptorSets::createDescriptorSets(VkDevice& logicalDevice, std::vector<V
 	}
 } // createDescriptorSets()
 
-void DescriptorSets::createDescriptorPool(VkDevice& logicalDevice)
+void DescriptorPool::createDescriptorPool(VkDevice& logicalDevice)
 {
 	std::array<VkDescriptorPoolSize, 2> poolSizes{};
 	poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
