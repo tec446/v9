@@ -381,6 +381,9 @@ private:
 	CommandPool    m_commandPool;
 	TextureImage   m_textureImage;
 	std::unique_ptr<TestPipeline> m_pipeline;
+
+	RenderObjects		  m_renderObjects;
+	RenderObjectInstances m_renderObjectInstances;
 	//
 	static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
 		reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window)) -> m_framebufferResized = true;
@@ -401,24 +404,20 @@ private:
 		m_renderPass.createRenderPass(m_device, m_swapChain);
 		m_descriptorPool.createDescriptorSetLayout(*m_device);
 		m_pipeline = std::make_unique<TestPipeline>(&m_device, &m_swapChain, &m_renderPass, &m_descriptorPool);
-//		m_pipeline.createPipeline(
-//			&m_swapChain,
-//			&m_renderPass,
-//			&m_descriptorSets
-//		);
 		m_commandPool.createCommandPool(m_device, m_window.m_surface);
 		m_swapChain.createColorResources(m_device, m_swapChain);
 		m_swapChain.createDepthResources(m_device, m_swapChain);
 		m_swapChain.createFramebuffers(m_device, *m_renderPass);
-		m_textureImage.createTextureImage(m_device, m_commandPool, m_swapChain);
-		m_textureImage.createTextureImageView(m_device, m_swapChain);
-		m_textureImage.createTextureSampler(m_device);
-		loadModel(m_commandPool.m_vertices, m_commandPool.m_indices);
-		m_pipeline->createVertexBuffer(m_device, m_commandPool);
-		m_pipeline->createIndexBuffer(m_device, m_commandPool);
-		m_pipeline->createUniformBuffers(m_device, m_descriptorPool.m_maxFramesInFlight);
+		
+		//m_textureImage.createTextureImage(m_device, m_commandPool, m_swapChain);
+		//m_textureImage.createTextureImageView(m_device, m_swapChain);
+		//m_textureImage.createTextureSampler(m_device);
+		//loadModel(m_commandPool.m_vertices, m_commandPool.m_indices);
+		//m_pipeline->createVertexBuffer(m_device, m_commandPool);
+		//m_pipeline->createIndexBuffer(m_device, m_commandPool);
+		//m_pipeline->createUniformBuffers(m_device, m_descriptorPool.m_maxFramesInFlight);
 		m_descriptorPool.createDescriptorPool(*m_device);
-		m_descriptorPool.createDescriptorSets(*m_device, m_pipeline->m_uniformBuffers, m_textureImage.m_textureImageView, m_textureImage.m_textureSampler);
+		//m_descriptorPool.createDescriptorSets(*m_device, m_pipeline->m_uniformBuffers, m_textureImage.m_textureImageView, m_textureImage.m_textureSampler);
 		m_commandPool.createCommandBuffers(m_device, m_descriptorPool.m_maxFramesInFlight);
 		m_commandPool.createSyncObjects(*m_device, m_descriptorPool.m_maxFramesInFlight);
 	}
@@ -506,11 +505,24 @@ private:
 		// Only reset fence when submitting work
 		vkResetFences(*m_device, 1, &m_commandPool.m_inFlightFences[m_commandPool.m_currentFrame]);
 
-		m_pipeline->vkUpdateUniformBuffer(m_swapChain, m_commandPool.m_currentFrame);
+		// Temporarily commented out
+		// Spins the mesh in a circle
+		//m_pipeline->vkUpdateUniformBuffer(m_swapChain, m_commandPool.m_currentFrame);
 
 		vkResetCommandBuffer(m_commandPool.m_commandBuffers[m_commandPool.m_currentFrame], 0);
 
-		m_commandPool.recordCommandBuffer(m_commandPool.m_commandBuffers[m_commandPool.m_currentFrame], m_descriptorPool.m_descriptorSets, m_pipeline->m_pipeline, m_pipeline->m_pipelineLayout, *m_renderPass, imageIndex, m_swapChain.m_swapChainFramebuffers, m_swapChain.m_swapChainExtent);
+		m_commandPool.recordCommandBuffer(
+			m_commandPool.m_commandBuffers[m_commandPool.m_currentFrame], 
+			m_descriptorPool.m_descriptorSets, 
+			m_pipeline->m_pipeline, 
+			m_pipeline->m_pipelineLayout, 
+			*m_renderPass, 
+			imageIndex, 
+			m_swapChain.m_swapChainFramebuffers, 
+			m_swapChain.m_swapChainExtent,
+			m_commandPool.m_vertexBuffer, // TODO: this should be a RenderObjects member
+			m_commandPool.m_indexBuffer   // TODO: this should be a RenderObjects member
+			);
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 

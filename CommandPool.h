@@ -26,7 +26,7 @@ public:
 	void createSyncObjects(VkDevice& logicalDevice, const int maxFramesInFlight);
 	void createCommandPool(Device& device, VkSurfaceKHR& surface);
 	void createCommandBuffers(Device& device, int maxFramesInFlight);
-	void recordCommandBuffer(VkCommandBuffer commandBuffer, std::vector<VkDescriptorSet>& descriptorSets, VkPipeline& graphicsPipeline, VkPipelineLayout& graphicsPipelineLayout, VkRenderPass& renderPass, uint32_t imageIndex, std::vector<VkFramebuffer>& frameBuffers, VkExtent2D extent2d);
+	void recordCommandBuffer(VkCommandBuffer commandBuffer, std::vector<VkDescriptorSet>& descriptorSets, VkPipeline& graphicsPipeline, VkPipelineLayout& graphicsPipelineLayout, VkRenderPass& renderPass, uint32_t imageIndex, std::vector<VkFramebuffer>& frameBuffers, VkExtent2D extent2d, VkBuffer& vertexBuffer, VkBuffer& indexBuffer);
 	auto beginSingleTimeCommands(Device& device) -> VkCommandBuffer;
 	void endSingleTimeCommands(Device& device, VkCommandBuffer commandBuffer);
 
