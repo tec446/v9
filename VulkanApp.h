@@ -247,10 +247,7 @@ public:
 		std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
 		// throw error if file wasn't opened successfully
-		if (!file.is_open())
-		{
-			throw std::runtime_error("failed to open file!");
-		}
+		if (!file.is_open()) { throw std::runtime_error("failed to open file!"); }
 
 		size_t fileSize = (size_t)file.tellg();	// get file size
 		std::vector<char> buffer(fileSize);		// create buffer to hold code
@@ -277,8 +274,7 @@ public:
 	void createUniformBuffers(
 		Device& device,
 		int maxFramesInFlight
-	)
-	{
+	) {
 		VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
 		m_uniformBuffers.resize(maxFramesInFlight);
@@ -442,8 +438,7 @@ private:
 		vkDestroyImage(*m_device, m_textureImage.m_textureImage, nullptr);
 		vkFreeMemory(*m_device, m_textureImage.m_textureImageMemory, nullptr);
 
-		for (size_t i = 0; i < m_descriptorPool.m_maxFramesInFlight; i++)
-		{
+		for (size_t i = 0; i < m_descriptorPool.m_maxFramesInFlight; i++) {
 			vkDestroyBuffer(*m_device, m_pipeline->m_uniformBuffers[i], nullptr);
 			vkFreeMemory(*m_device, m_pipeline->m_uniformBuffersMemory[i], nullptr);
 		}
@@ -472,8 +467,8 @@ private:
 
 		vkDestroyDevice(*m_device, nullptr);
 
-		if (enableValidationLayers) 
-		{ m_debugMessenger.DestroyDebugUtilsMessengerEXT(*m_instance, nullptr); }
+		if (enableValidationLayers) { 
+			m_debugMessenger.DestroyDebugUtilsMessengerEXT(*m_instance, nullptr); }
 
 		vkDestroySurfaceKHR(*m_instance, m_window.m_surface, nullptr);
 		vkDestroyInstance(*m_instance, nullptr);
@@ -481,11 +476,12 @@ private:
 		glfwDestroyWindow(*m_window);
 
 		glfwTerminate();
-	}
+
+	} // cleanup()
 
 	bool hasStencilComponent(VkFormat format) {
-		return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
-	}
+		return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT; 
+	} // hasStencilComponent()
 
 	void drawFrame() {
 		vkWaitForFences(*m_device, 1, &m_commandPool.m_inFlightFences[m_commandPool.m_currentFrame], VK_TRUE, UINT64_MAX);
@@ -523,6 +519,7 @@ private:
 			m_commandPool.m_vertexBuffer, // TODO: this should be a RenderObjects member
 			m_commandPool.m_indexBuffer   // TODO: this should be a RenderObjects member
 			);
+
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -549,8 +546,7 @@ private:
 		presentInfo.pResults = nullptr;
 
 		if (vkQueueSubmit(m_device.m_graphicsQueue, 1, &submitInfo, m_commandPool.m_inFlightFences[m_commandPool.m_currentFrame]) != VK_SUCCESS) {
-			throw std::runtime_error("failed to submit draw command buffer!");
-		}
+			throw std::runtime_error("failed to submit draw command buffer!"); }
 
 		result = vkQueuePresentKHR(m_device.m_presentQueue, &presentInfo);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_framebufferResized) {
@@ -562,7 +558,8 @@ private:
 		}
 
 		m_commandPool.m_currentFrame = (m_commandPool.m_currentFrame + 1) % m_descriptorPool.m_maxFramesInFlight;
-	}
+
+	} // drawFrame()
 
 	void loadModel(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
 	{
@@ -571,17 +568,13 @@ private:
 		std::vector<tinyobj::material_t> materials;
 		std::string warn, err;
 
-		if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, TempMagicValues::MODEL_PATH.c_str()))
-		{
-			throw std::runtime_error(warn + err);
-		}
+		if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, TempMagicValues::MODEL_PATH.c_str())) {
+			throw std::runtime_error(warn + err); }
 
 		std::unordered_map<Vertex, uint32_t> uniqueVertices{};
 
-		for (const auto& shape : shapes)
-		{
-			for (const auto& index : shape.mesh.indices)
-			{
+		for (const auto& shape : shapes) {
+			for (const auto& index : shape.mesh.indices) {
 				Vertex vertex{};
 
 				vertex.pos = {
@@ -597,15 +590,14 @@ private:
 
 				vertex.color = { 1.0f, 1.0f, 1.0f };
 
-				if (uniqueVertices.count(vertex) == 0)
-				{
+				if (uniqueVertices.count(vertex) == 0) {
 					uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
 					vertices.push_back(vertex);
 				}
 
 				indices.push_back(uniqueVertices[vertex]);
-			}
-		}
+			} // for index
+		} // for shape
 	} // loadModel()
 
 }; // class VulkanApp
