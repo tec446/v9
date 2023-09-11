@@ -29,7 +29,11 @@ void DescriptorSet::createDescriptorSetLayout(VkDevice& logicalDevice)
 	}
 } // createDescriptorSetLayout
 
+<<<<<<< Updated upstream:DescriptorSet.cpp
 void DescriptorSet::createDescriptorSets(VkDevice& logicalDevice, std::vector<VkBuffer>& uniformBuffers, VkImageView& textureImageView, VkSampler& textureSampler)
+=======
+void DescriptorPool::createDescriptorSets(VkDevice& logicalDevice, std::vector<VkBuffer>& uniformBuffers, VkImageView& textureImageView, VkSampler& textureSampler, std::vector<VkDescriptorSet>& descriptorSets)
+>>>>>>> Stashed changes:DescriptorPool.cpp
 {
 	std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, m_descriptorSetLayout);
 	VkDescriptorSetAllocateInfo allocInfo{};
@@ -38,11 +42,17 @@ void DescriptorSet::createDescriptorSets(VkDevice& logicalDevice, std::vector<Vk
 	allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 	allocInfo.pSetLayouts = layouts.data();
 
+<<<<<<< Updated upstream:DescriptorSet.cpp
 	m_descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
 	if (vkAllocateDescriptorSets(logicalDevice, &allocInfo, m_descriptorSets.data()) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to allocate descriptor sets!");
 	}
+=======
+	descriptorSets.resize(m_maxFramesInFlight);
+	if (vkAllocateDescriptorSets(logicalDevice, &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
+		throw std::runtime_error("failed to allocate descriptor sets!"); }
+>>>>>>> Stashed changes:DescriptorPool.cpp
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 	{
@@ -59,7 +69,7 @@ void DescriptorSet::createDescriptorSets(VkDevice& logicalDevice, std::vector<Vk
 		std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
 
 		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrites[0].dstSet = m_descriptorSets[i];
+		descriptorWrites[0].dstSet = descriptorSets[i];
 		descriptorWrites[0].dstBinding = 0;
 		descriptorWrites[0].dstArrayElement = 0;
 		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -67,7 +77,7 @@ void DescriptorSet::createDescriptorSets(VkDevice& logicalDevice, std::vector<Vk
 		descriptorWrites[0].pBufferInfo = &bufferInfo;
 
 		descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrites[1].dstSet = m_descriptorSets[i];
+		descriptorWrites[1].dstSet = descriptorSets[i];
 		descriptorWrites[1].dstBinding = 1;
 		descriptorWrites[1].dstArrayElement = 0;
 		descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;

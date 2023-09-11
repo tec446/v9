@@ -14,9 +14,10 @@ public:
 
 	VkDescriptorSetLayout		 m_descriptorSetLayout{};
 	VkDescriptorPool			 m_descriptorPool{};
-	std::vector<VkDescriptorSet> m_descriptorSets{};
+	//std::vector<VkDescriptorSet> m_descriptorSets{};
 
 	void createDescriptorSetLayout(VkDevice& logicalDevice);
+<<<<<<< Updated upstream:DescriptorSet.h
 	void createDescriptorSets(VkDevice& logicalDevice, std::vector<VkBuffer>& uniformBuffers, VkImageView& textureImageView, VkSampler& textureSampler);
 	void createDescriptorPool(VkDevice&);
 
@@ -24,4 +25,9 @@ public:
 	auto operator*()		   -> std::vector<VkDescriptorSet>& { return m_descriptorSets; }
 	auto operator[](int index) -> VkDescriptorSet&				{ return m_descriptorSets[index]; }
 
+=======
+	void createDescriptorPool(VkDevice& logicalDevice);
+	void createDescriptorSets(VkDevice& logicalDevice, std::vector<VkBuffer>& uniformBuffers, VkImageView& textureImageView, VkSampler& textureSampler, std::vector<VkDescriptorSet>& descriptorSets);
+	
+>>>>>>> Stashed changes:DescriptorPool.h
 }; // class DescriptorSet

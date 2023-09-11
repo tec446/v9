@@ -1,5 +1,6 @@
 #include "CommandPool.h"
 
+#include <iostream>
 
 void CommandPool::createCommandPool(PhysicalDevice& physicalDevice, LogicalDevice& logicalDevice, VkSurfaceKHR& surface)
 {
@@ -86,10 +87,18 @@ void CommandPool::recordCommandBuffer
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 		vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineLayout,
-			0, 1, &descriptorSets[m_currentFrame], 0, nullptr);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_indices.size()), 1, 0, 0, 0);
-	}
+		std::cout << "test bang.";
+
+		// TODO: replace this with a valid empty descriptor set eventually
+		if (descriptorSets.size() > 0) {
+			std::cout << "bang!";
+		}
+		if (descriptorSets.size() > 0) {
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineLayout,
+				0, 1, &descriptorSets[m_currentFrame], 0, nullptr);
+			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_indices.size()), 1, 0, 0, 0);
+		}
+	} // render pass
 	vkCmdEndRenderPass(commandBuffer);
 
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
