@@ -537,12 +537,15 @@ private:
 	} // hasStencilComponent()
 
 	void drawFrame() {
+		// Wait until the GPU has finished rendering the last frame
 		vkWaitForFences(*m_device, 1, &m_commandPool.m_inFlightFences[m_commandPool.m_currentFrame], VK_TRUE, UINT64_MAX);
 
+		// Get index of next image to draw to and set it to be in use
 		uint32_t imageIndex;
 		VkResult result = vkAcquireNextImageKHR(*m_device, *m_swapChain, UINT64_MAX,
 			m_commandPool.m_imageAvailableSemaphores[m_commandPool.m_currentFrame], VK_NULL_HANDLE, &imageIndex);
 
+		// Validate swapChain, resize if needed
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
 			m_swapChain.recreateSwapChain(m_device, **m_window, m_window.m_surface, *m_renderPass);
 			return;
@@ -610,6 +613,7 @@ private:
 			throw std::runtime_error("failed to present swap chain image");
 		}
 
+		// update current frame
 		m_commandPool.m_currentFrame = (m_commandPool.m_currentFrame + 1) % m_descriptorPool.m_maxFramesInFlight;
 
 	} // drawFrame()
