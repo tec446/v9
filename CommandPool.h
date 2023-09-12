@@ -6,6 +6,7 @@
 #include <stdexcept>
 
 #include "Device.h"
+#include "RenderObjects.h"
 
 class CommandPool
 {
@@ -26,7 +27,7 @@ public:
 	void createSyncObjects(VkDevice& logicalDevice, const int maxFramesInFlight);
 	void createCommandPool(Device& device, VkSurfaceKHR& surface);
 	void createCommandBuffers(Device& device, int maxFramesInFlight);
-	void recordCommandBuffer(VkCommandBuffer commandBuffer, std::vector<VkDescriptorSet>& descriptorSets, VkPipeline& graphicsPipeline, VkPipelineLayout& graphicsPipelineLayout, VkRenderPass& renderPass, uint32_t imageIndex, std::vector<VkFramebuffer>& frameBuffers, VkExtent2D extent2d, VkBuffer& vertexBuffer, VkBuffer& indexBuffer);
+	void recordCommandBuffer(VkCommandBuffer commandBuffer, VkPipeline& graphicsPipeline, VkPipelineLayout& graphicsPipelineLayout, VkRenderPass& renderPass, uint32_t imageIndex, std::vector<VkFramebuffer>& frameBuffers, VkExtent2D extent2d, RenderObjects& renderObjects);
 	auto beginSingleTimeCommands(Device& device) -> VkCommandBuffer;
 	void endSingleTimeCommands(Device& device, VkCommandBuffer commandBuffer);
 

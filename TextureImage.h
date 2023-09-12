@@ -27,6 +27,6 @@ public:
 	void createTextureSampler(Device& device);
 
 	// Allows us to use the class like a pointer
-	auto operator*() -> VkImage& { return(m_textureImage); } // operator * override
+	//auto operator*() -> VkImage& { return(m_textureImage); } // operator * override
 
 }; // class TextureImage

@@ -1,5 +1,5 @@
 #include "TextureImage.h"
-
+/*
 void TextureImage::createTextureImage
 (
 	Device& device,
@@ -42,6 +42,7 @@ void TextureImage::createTextureImageView(Device& device, SwapChain& swapChain)
 	m_textureImageView = swapChain.createImageView(device, m_textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, m_mipLevels);
 }
 
+*/
 void TextureImage::transitionImageLayout(Device& device, CommandPool& commandPool, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels)
 {
 	VkCommandBuffer commandBuffer = commandPool.beginSingleTimeCommands(device);
@@ -184,7 +185,7 @@ void TextureImage::generateMipmaps(Device& device, CommandPool& commandPool, VkI
 
 	commandPool.endSingleTimeCommands(device, commandBuffer);
 } // generateMipmaps()
-
+/*
 void TextureImage::createTextureSampler(Device& device)
 {
 	VkPhysicalDeviceProperties properties{};
@@ -213,3 +214,4 @@ void TextureImage::createTextureSampler(Device& device)
 		throw std::runtime_error("failed to create texture sampler!");
 	}
 } // createTextureSampler()
+*/

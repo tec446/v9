@@ -22,7 +22,7 @@ public:
 	/// Data relevent to all instances of an object
 	struct Objects {
 
-		enum class indexType
+		enum class IndexType
 		{
 			textureImage,
 			textureImageMemory,
@@ -54,7 +54,7 @@ public:
 		std::vector<std::vector<uint16_t>> objectIndices{};
 		std::vector<std::vector<uint16_t>> freeIndices{};
 
-	}; // struct ObjectData
+	}; // struct Objects
 
 	/// Data relevent to individual instances of an object
 	struct Instances {
@@ -67,7 +67,7 @@ public:
 		std::vector<std::vector<VkDescriptorSet>> descriptorSets{};
 
 		// used to access objectIndices in ObjectData
-		std::vector<uint16_t>		referenceIndices{};
+		std::vector<uint16_t> referenceIndices{};
 
 	}; // struct instanceData
 

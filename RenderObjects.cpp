@@ -77,8 +77,8 @@ void RenderObjects::createRenderInstance(
 	createDescriptorSets(
 		*device, 
 		uniformBuffers, 
-		m_objects.textureImageView[referenceIndices[static_cast<uint32_t>(Objects::indexType::textureImageView)]],
-		m_objects.textureSampler[referenceIndices[static_cast<uint32_t>(Objects::indexType::textureSampler)]],
+		m_objects.textureImageView[referenceIndices[static_cast<uint32_t>(Objects::IndexType::textureImageView)]],
+		m_objects.textureSampler[referenceIndices[static_cast<uint32_t>(Objects::IndexType::textureSampler)]],
 		descriptorSets, 
 		maxFramesInFlight, 
 		descriptorPool.m_descriptorSetLayout,

@@ -427,10 +427,10 @@ private:
 		std::string texturePath, 
 		std::string modelPath
 	) {
-		VkImage			textureImage;
-		VkDeviceMemory	textureImageMemory;
-		VkImageView		textureImageView;
-		VkSampler		textureSampler;
+		VkImage		   textureImage;
+		VkDeviceMemory textureImageMemory;
+		VkImageView	   textureImageView;
+		VkSampler	   textureSampler;
 		RenderObjects::createTextureImage(m_device, m_commandPool, texturePath, m_textureImage.m_mipLevels, textureImage, textureImageMemory);
 		RenderObjects::createTextureImageView(m_device, m_textureImage.m_mipLevels, textureImage, textureImageView);
 		RenderObjects::createTextureSampler(m_device, m_textureImage.m_mipLevels, textureSampler);
@@ -559,21 +559,20 @@ private:
 
 		// Temporarily commented out
 		// Spins the mesh in a circle
+		// // modifies the descriptor sets using the uniform buffers
 		//m_pipeline->vkUpdateUniformBuffer(m_swapChain, m_commandPool.m_currentFrame);
 
 		vkResetCommandBuffer(m_commandPool.m_commandBuffers[m_commandPool.m_currentFrame], 0);
 
 		m_commandPool.recordCommandBuffer(
 			m_commandPool.m_commandBuffers[m_commandPool.m_currentFrame], 
-			m_descriptorPool.m_descriptorSets, 
 			m_pipeline->m_pipeline, 
 			m_pipeline->m_pipelineLayout, 
 			*m_renderPass, 
 			imageIndex, 
 			m_swapChain.m_swapChainFramebuffers, 
 			m_swapChain.m_swapChainExtent,
-			m_commandPool.m_vertexBuffer, // TODO: this should be a RenderObjects member
-			m_commandPool.m_indexBuffer   // TODO: this should be a RenderObjects member
+			m_renderObjects
 			);
 
 		VkSubmitInfo submitInfo{};

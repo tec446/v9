@@ -14,7 +14,7 @@ public:
 
 	VkDescriptorSetLayout		 m_descriptorSetLayout{};
 	VkDescriptorPool			 m_descriptorPool{};
-	std::vector<VkDescriptorSet> m_descriptorSets{};
+	//std::vector<VkDescriptorSet> m_descriptorSets{};
 
 	void createDescriptorSetLayout(VkDevice& logicalDevice);
 	void createDescriptorPool(VkDevice& logicalDevice);

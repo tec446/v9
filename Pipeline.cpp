@@ -217,7 +217,7 @@ auto Pipeline::createShaderModule(const std::vector<char>& code) -> VkShaderModu
 
 	return shaderModule;
 } // createShaderModule()
-
+/*
 void Pipeline::createUniformBuffers(
 	Device& device,
 	int maxFramesInFlight
@@ -281,6 +281,7 @@ void Pipeline::createIndexBuffer(
 	vkDestroyBuffer(*device, stagingBuffer, nullptr);
 	vkFreeMemory(*device, stagingBufferMemory, nullptr);
 } // createIndexBuffer()
+*/
 
 void Pipeline::vkUpdateUniformBuffer(SwapChain& swapChain, uint32_t currentImage) {
 	static auto startTime = std::chrono::high_resolution_clock::now();

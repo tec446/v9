@@ -31,16 +31,14 @@ void CommandPool::createCommandBuffers(Device& device, int maxFramesInFlight)
 } // createCommandBuffers()
 
 void CommandPool::recordCommandBuffer(
-	VkCommandBuffer commandBuffer,
-	std::vector<VkDescriptorSet>& descriptorSets,
-	VkPipeline& graphicsPipeline,
-	VkPipelineLayout& graphicsPipelineLayout,
-	VkRenderPass& renderPass,
-	uint32_t imageIndex,
-	std::vector<VkFramebuffer>& frameBuffers,
-	VkExtent2D extent2d,
-	VkBuffer& vertexBuffer,
-	VkBuffer& indexBuffer
+	VkCommandBuffer				  commandBuffer,
+	VkPipeline&					  graphicsPipeline,
+	VkPipelineLayout&			  graphicsPipelineLayout,
+	VkRenderPass&				  renderPass,
+	uint32_t					  imageIndex,
+	std::vector<VkFramebuffer>&   frameBuffers,
+	VkExtent2D					  extent2d,
+	RenderObjects&				  renderObjects
 ) {
 	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -81,18 +79,35 @@ void CommandPool::recordCommandBuffer(
 		scissor.extent = extent2d;
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-		if (vertexBuffer != VK_NULL_HANDLE && indexBuffer != VK_NULL_HANDLE) {
-			VkBuffer vertexBuffers[] = { vertexBuffer };
-			VkDeviceSize offsets[] = { 0 };
-			vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-			vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-		}
 
-		if (descriptorSets.size() > 0) {
-			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineLayout,
-				0, 1, &descriptorSets[m_currentFrame], 0, nullptr);
-			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_indices.size()), 1, 0, 0, 0);
-		}
+		// If there is anything to render
+		if (renderObjects.m_instances.referenceIndices.size() > 0) {
+			auto& objects  { renderObjects.m_objects   };
+			auto& instances{ renderObjects.m_instances };
+			auto& referenceIndices{instances.referenceIndices};
+			
+			for (int i = 0; i < referenceIndices.size(); i++) {
+				// vertexBuffer
+				uint16_t vertexIndex{ static_cast<uint16_t>(RenderObjects::Objects::IndexType::vertexBuffer) };
+				VkBuffer& vertexBuffer{ objects.vertexBuffer[referenceIndices[vertexIndex]] };
+				// indexBuffer
+				uint16_t indexIndex{ static_cast<uint16_t>(RenderObjects::Objects::IndexType::indexBuffer) };
+				VkBuffer& indexBuffer{ objects.indexBuffer[referenceIndices[indexIndex]] };
+				// indices
+				uint16_t indicesIndex{ static_cast<uint16_t>(RenderObjects::Objects::IndexType::indexBuffer) };
+				std::vector<uint32_t>& indices{ objects.indices[referenceIndices[indicesIndex]] };
+				// descriptorSets
+				std::vector<VkDescriptorSet>& descriptorSets{ instances.descriptorSets[i] };
+
+				VkDeviceSize offsets[] = { 0 };
+				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, offsets);
+				vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineLayout,
+					0, 1, &descriptorSets[m_currentFrame], 0, nullptr);
+				vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+			} // for each instance
+		} // if instances to render
 	}
 	vkCmdEndRenderPass(commandBuffer);
 
