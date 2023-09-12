@@ -15,10 +15,10 @@ class TextureImage
 {
 public:
 	uint32_t	   m_mipLevels;
-	VkImage		   m_textureImage;
-	VkDeviceMemory m_textureImageMemory;
-	VkImageView    m_textureImageView;
-	VkSampler	   m_textureSampler;
+	//VkImage		   m_textureImage;
+	//VkDeviceMemory m_textureImageMemory;
+	//VkImageView    m_textureImageView;
+	//VkSampler	   m_textureSampler;
 
 	void createTextureImage(Device& device, CommandPool& commandPool, SwapChain& swapChain);
 	void createTextureImageView(Device& device, SwapChain& swapChain);

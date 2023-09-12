@@ -2,54 +2,97 @@
 
 #include <stb_image.h>
 
-bool RenderObjects::createRenderObject(
-	std::vector<VkDescriptorSet> descriptorSets,
-	std::vector<Vertex>	  vertices,
-	std::vector<uint32_t> indices,
-	VkBuffer			  vertexBuffer,
-	VkDeviceMemory		  vertexBufferMemory,
-	VkBuffer			  indexBuffer,
-	VkDeviceMemory		  indexBufferMemory,
-	VkBuffer			  uniformBuffer,
-	VkDeviceMemory		  uniformBufferMemory,
-	void* uniformBufferMapped,
-	VkImage				  textureImage,
-	VkDeviceMemory		  textureImageMemory,
-	VkImageView			  textureImageView,
-	VkSampler			  textureSampler,
-	std::string			  objectName
+int RenderObjects::createRenderObject(
+	VkImage						 textureImage,
+	VkDeviceMemory				 textureImageMemory,
+	VkImageView					 textureImageView,
+	VkSampler					 textureSampler,
+	std::vector<Vertex>			 vertices,
+	VkBuffer					 vertexBuffer,
+	VkDeviceMemory				 vertexBufferMemory,
+	std::vector<uint32_t>		 indices,
+	VkBuffer					 indexBuffer,
+	VkDeviceMemory				 indexBufferMemory,
+	std::string					 objectName
 ) {
 
-	m_descriptorSets.push_back(descriptorSets);
-	m_vertices.push_back(vertices);
-	m_indices.push_back(indices);
-	m_vertexBuffer.push_back(vertexBuffer);
-	m_vertexBufferMemory.push_back(vertexBufferMemory);
-	m_indexBuffer.push_back(indexBuffer);
-	m_indexBufferMemory.push_back(indexBufferMemory);
-	m_uniformBuffers.push_back(uniformBuffer);
-	m_uniformBuffersMemory.push_back(uniformBufferMemory);
-	m_uniformBuffersMapped.push_back(uniformBufferMapped);
-	m_textureImage.push_back(textureImage);
-	m_textureImageMemory.push_back(textureImageMemory);
-	m_textureImageView.push_back(textureImageView);
-	m_textureSampler.push_back(textureSampler);
+	m_objects.textureImage.push_back(textureImage);
+	m_objects.textureImageMemory.push_back(textureImageMemory);
+	m_objects.textureImageView.push_back(textureImageView);
+	m_objects.textureSampler.push_back(textureSampler);
 
-	m_objectIndices.push_back(m_objectIndices.size());
-	m_objectNames.push_back(objectName);
+	m_objects.vertices.push_back(vertices);
+	m_objects.vertexBuffer.push_back(vertexBuffer);
+	m_objects.vertexBufferMemory.push_back(vertexBufferMemory);
+	m_objects.indices.push_back(indices);
+	m_objects.indexBuffer.push_back(indexBuffer);
+	m_objects.indexBufferMemory.push_back(indexBufferMemory);
+
+	m_objects.objectNames.push_back(objectName);
+
+	m_objects.objectIndices.push_back(
+		{
+			static_cast<uint16_t>(m_objects.textureImage.size() - 1),
+			static_cast<uint16_t>(m_objects.textureImageMemory.size() - 1),
+			static_cast<uint16_t>(m_objects.textureImageView.size() - 1),
+			static_cast<uint16_t>(m_objects.textureSampler.size() - 1),
+
+			static_cast<uint16_t>(m_objects.vertices.size() - 1),
+			static_cast<uint16_t>(m_objects.vertexBuffer.size() - 1),
+			static_cast<uint16_t>(m_objects.vertexBufferMemory.size() - 1),
+			static_cast<uint16_t>(m_objects.indices.size() - 1),
+			static_cast<uint16_t>(m_objects.indexBuffer.size() - 1),
+			static_cast<uint16_t>(m_objects.indexBufferMemory.size() - 1),
+
+			static_cast<uint16_t>(m_objects.objectNames.size() - 1)
+		}
+	);
 
 	// TODO: check if object already exists first
 
-	return true;
-}
+	// returns the index of the objectIndices
+	return (m_objects.objectIndices.size() - 1);
+} // createRenderObject()
+
+void RenderObjects::createRenderInstance(
+	Device& device, 
+	int maxFramesInFlight, 
+	int referenceIndex,
+	DescriptorPool& descriptorPool
+) {
+	std::vector<VkBuffer>       uniformBuffers;
+	std::vector<VkDeviceMemory> uniformBuffersMemory;
+	std::vector<void*>		    uniformBuffersMapped;
+	std::vector<VkDescriptorSet> descriptorSets;
+
+	std::vector<uint16_t> referenceIndices = m_objects.objectIndices[referenceIndex];
+
+	createUniformBuffers(
+		device, 
+		maxFramesInFlight, 
+		uniformBuffers, 
+		uniformBuffersMemory, 
+		uniformBuffersMapped
+		);
+	createDescriptorSets(
+		*device, 
+		uniformBuffers, 
+		m_objects.textureImageView[referenceIndices[static_cast<uint32_t>(Objects::indexType::textureImageView)]],
+		m_objects.textureSampler[referenceIndices[static_cast<uint32_t>(Objects::indexType::textureSampler)]],
+		descriptorSets, 
+		maxFramesInFlight, 
+		descriptorPool.m_descriptorSetLayout,
+		descriptorPool.m_descriptorPool
+	);
+
+} // createRenderInstance()
 
 void RenderObjects::createTextureImage(
-	Device& device,
-	CommandPool& commandPool,
-	SwapChain& swapChain,
-	std::string texturePath,
-	uint32_t mipLevels,
-	VkImage& textureImage,
+	Device&			device,
+	CommandPool&	commandPool,
+	std::string&	texturePath,
+	uint32_t		mipLevels,
+	VkImage&		textureImage,
 	VkDeviceMemory& textureImageMemory
 ) {
 	int texWidth, texHeight, texChannels;
@@ -70,7 +113,7 @@ void RenderObjects::createTextureImage(
 
 	stbi_image_free(pixels);
 
-	swapChain.createImage(device, texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
+	createImage(device, texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
 
 	transitionImageLayout(device, commandPool, textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
 	Buffer::copyToImage(device, commandPool, stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
@@ -83,17 +126,17 @@ void RenderObjects::createTextureImage(
 } // createTextureImage()
 
 void RenderObjects::createImage(
-	Device& device,
-	uint32_t width,
-	uint32_t height,
-	uint32_t mipLevels,
+	Device&				  device,
+	uint32_t			  width,
+	uint32_t			  height,
+	uint32_t			  mipLevels,
 	VkSampleCountFlagBits numSamples,
-	VkFormat format,
-	VkImageTiling tiling,
-	VkImageUsageFlags usage,
+	VkFormat			  format,
+	VkImageTiling		  tiling,
+	VkImageUsageFlags	  usage,
 	VkMemoryPropertyFlags properties,
-	VkImage& image,
-	VkDeviceMemory& imageMemory
+	VkImage&			  image,
+	VkDeviceMemory&		  imageMemory
 )
 {
 	VkImageCreateInfo imageInfo{};
@@ -289,18 +332,23 @@ void RenderObjects::transitionImageLayout(Device& device, CommandPool& commandPo
 	commandPool.endSingleTimeCommands(device, commandBuffer);
 } // transitionImageLayout()
 
-auto RenderObjects::createTextureImageView(Device& device, SwapChain& swapChain, uint32_t mipLevels, VkImage& textureImage) -> VkImageView {
-	return createImageView(device, textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels);
+void RenderObjects::createTextureImageView(
+	Device& device, 
+	uint32_t mipLevels, 
+	VkImage& textureImage, 
+	VkImageView& imageView
+) {
+	return createImageView(device, textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels, imageView);
 } // createTextureImageView()
 
-auto RenderObjects::createImageView(
+void RenderObjects::createImageView(
 	Device& device,
 	VkImage image,
 	VkFormat format,
 	VkImageAspectFlags aspectFlags,
-	uint32_t mipLevels
-) -> VkImageView
-{
+	uint32_t mipLevels,
+	VkImageView& imageView
+) {
 	VkImageViewCreateInfo viewInfo{};
 	viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	viewInfo.image = image;
@@ -312,16 +360,16 @@ auto RenderObjects::createImageView(
 	viewInfo.subresourceRange.baseArrayLayer = 0;
 	viewInfo.subresourceRange.layerCount = 1;
 
-	VkImageView imageView;
 	if (vkCreateImageView(*device, &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create texture image view!");
-	}
+		throw std::runtime_error("failed to create texture image view!");}
 
-	return imageView;
 } // createImageView()
 
-void RenderObjects::createTextureSampler(Device& device, uint32_t mipLevels, VkSampler& textureSampler)
-{
+void RenderObjects::createTextureSampler(
+	Device&    device, 
+	uint32_t   mipLevels, 
+	VkSampler& textureSampler
+) {
 	VkPhysicalDeviceProperties properties{};
 	vkGetPhysicalDeviceProperties(device.m_physical, &properties);
 
@@ -349,23 +397,34 @@ void RenderObjects::createTextureSampler(Device& device, uint32_t mipLevels, VkS
 
 } // createTextureSampler()
 
-void RenderObjects::createUniformBuffers(Device& device, int maxFramesInFlight) {
+void RenderObjects::createUniformBuffers(
+	Device&						 device, 
+	int							 maxFramesInFlight, 
+	std::vector<VkBuffer>&		 uniformBuffers, 
+	std::vector<VkDeviceMemory>& uniformBuffersMemory, 
+	std::vector<void*>&			 uniformBuffersMapped
+) {
 	VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
-	m_uniformBuffers.resize(maxFramesInFlight);
-	m_uniformBuffersMemory.resize(maxFramesInFlight);
-	m_uniformBuffersMapped.resize(maxFramesInFlight);
+	uniformBuffers.resize(maxFramesInFlight);
+	uniformBuffersMemory.resize(maxFramesInFlight);
+	uniformBuffersMapped.resize(maxFramesInFlight);
 
-	for (size_t i = 0; i < maxFramesInFlight; i++)
-	{
-		Buffer::create(device, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_uniformBuffers[i], m_uniformBuffersMemory[i]);
+	for (size_t i = 0; i < maxFramesInFlight; i++) {
+		Buffer::create(device, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
 
-		vkMapMemory(*device, m_uniformBuffersMemory[i], 0, bufferSize, 0, &m_uniformBuffersMapped[i]);
+		vkMapMemory(*device, uniformBuffersMemory[i], 0, bufferSize, 0, &uniformBuffersMapped[i]);
 	}
 } // createUniformBuffers()
 
-void RenderObjects::createVertexBuffer(Device& device, CommandPool& commandPool) {
-	VkDeviceSize bufferSize = sizeof(commandPool.m_vertices[0]) * commandPool.m_vertices.size();
+void RenderObjects::createVertexBuffer(
+	Device&				 device, 
+	CommandPool&		 commandPool, 
+	std::vector<Vertex>& vertices,
+	VkBuffer&			 vertexBuffer,
+	VkDeviceMemory&		 vertexBufferMemory
+) {
+	VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
 	VkBuffer stagingBuffer;
 	VkDeviceMemory stagingBufferMemory;
@@ -373,19 +432,25 @@ void RenderObjects::createVertexBuffer(Device& device, CommandPool& commandPool)
 
 	void* data;
 	vkMapMemory(*device, stagingBufferMemory, 0, bufferSize, 0, &data);
-	memcpy(data, commandPool.m_vertices.data(), (size_t)bufferSize);
+	memcpy(data, vertices.data(), (size_t)bufferSize);
 	vkUnmapMemory(*device, stagingBufferMemory);
 
-	Buffer::create(device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, commandPool.m_vertexBuffer, commandPool.m_vertexBufferMemory);
+	Buffer::create(device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
 
-	Buffer::copy(device, commandPool, stagingBuffer, commandPool.m_vertexBuffer, bufferSize);
+	Buffer::copy(device, commandPool, stagingBuffer, vertexBuffer, bufferSize);
 
 	vkDestroyBuffer(*device, stagingBuffer, nullptr);
 	vkFreeMemory(*device, stagingBufferMemory, nullptr);
 } // createVertexBuffer()
 
-void RenderObjects::createIndexBuffer(Device& device, CommandPool& commandPool) {
-	VkDeviceSize bufferSize = sizeof(commandPool.m_indices[0]) * commandPool.m_indices.size();
+void RenderObjects::createIndexBuffer(
+	Device&				   device, 
+	CommandPool&		   commandPool,
+	std::vector<uint32_t>& indices,
+	VkBuffer&			   indexBuffer,
+	VkDeviceMemory&		   indexBufferMemory
+) {
+	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
 	VkBuffer stagingBuffer;
 	VkDeviceMemory stagingBufferMemory;
@@ -393,12 +458,12 @@ void RenderObjects::createIndexBuffer(Device& device, CommandPool& commandPool) 
 
 	void* data;
 	vkMapMemory(*device, stagingBufferMemory, 0, bufferSize, 0, &data);
-	memcpy(data, commandPool.m_indices.data(), (size_t)bufferSize);
+	memcpy(data, indices.data(), (size_t)bufferSize);
 	vkUnmapMemory(*device, stagingBufferMemory);
 
-	Buffer::create(device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, commandPool.m_indexBuffer, commandPool.m_indexBufferMemory);
+	Buffer::create(device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
 
-	Buffer::copy(device, commandPool, stagingBuffer, commandPool.m_indexBuffer, bufferSize);
+	Buffer::copy(device, commandPool, stagingBuffer, indexBuffer, bufferSize);
 
 	vkDestroyBuffer(*device, stagingBuffer, nullptr);
 	vkFreeMemory(*device, stagingBufferMemory, nullptr);

@@ -19,10 +19,8 @@ namespace Buffer
 		bufferInfo.usage = usage;
 		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		if (vkCreateBuffer(*device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create buffer!");
-		}
+		if (vkCreateBuffer(*device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
+			throw std::runtime_error("failed to create buffer!"); }
 
 		VkMemoryRequirements memRequirements;
 		vkGetBufferMemoryRequirements(*device, buffer, &memRequirements);
@@ -32,10 +30,8 @@ namespace Buffer
 		allocInfo.allocationSize = memRequirements.size;
 		allocInfo.memoryTypeIndex = SwapChain::findMemoryType(device, memRequirements.memoryTypeBits, properties);
 
-		if (vkAllocateMemory(*device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to allocate buffer memory!");
-		}
+		if (vkAllocateMemory(*device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
+			throw std::runtime_error("failed to allocate buffer memory!"); }
 
 		vkBindBufferMemory(*device, buffer, bufferMemory, 0);
 

@@ -378,8 +378,8 @@ private:
 	TextureImage   m_textureImage;
 	std::unique_ptr<TestPipeline> m_pipeline;
 
-	RenderObjects		  m_renderObjects;
-	RenderObjectInstances m_renderObjectInstances;
+	RenderObjects m_renderObjects;
+
 	//
 	static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
 		reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window)) -> m_framebufferResized = true;
@@ -416,7 +416,56 @@ private:
 		//m_descriptorPool.createDescriptorSets(*m_device, m_pipeline->m_uniformBuffers, m_textureImage.m_textureImageView, m_textureImage.m_textureSampler);
 		m_commandPool.createCommandBuffers(m_device, m_descriptorPool.m_maxFramesInFlight);
 		m_commandPool.createSyncObjects(*m_device, m_descriptorPool.m_maxFramesInFlight);
-	}
+	
+		tempCreateObjects();
+
+	} // initVulkan()
+
+	void tempCreateObjects(
+		std::string objectName, 
+		std::string texturePath, 
+		std::string modelPath
+	) {
+		VkImage			textureImage;
+		VkDeviceMemory	textureImageMemory;
+		VkImageView		textureImageView;
+		VkSampler		textureSampler;
+		RenderObjects::createTextureImage(m_device, m_commandPool, texturePath, m_textureImage.m_mipLevels, textureImage, textureImageMemory);
+		RenderObjects::createTextureImageView(m_device, m_textureImage.m_mipLevels, textureImage, textureImageView);
+		RenderObjects::createTextureSampler(m_device, m_textureImage.m_mipLevels, textureSampler);
+		
+		std::vector<Vertex>	  vertices;
+		VkBuffer			  vertexBuffer;
+		VkDeviceMemory		  vertexBufferMemory;
+		std::vector<uint32_t> indices;
+		VkBuffer			  indexBuffer;
+		VkDeviceMemory		  indexBufferMemory;
+		loadModel(modelPath, vertices, indices);
+		RenderObjects::createVertexBuffer(m_device, m_commandPool, vertices, vertexBuffer, vertexBufferMemory);
+		RenderObjects::createIndexBuffer(m_device, m_commandPool, indices, indexBuffer, indexBufferMemory);
+		
+		int referenceIndex = m_renderObjects.createRenderObject(
+			textureImage,
+			textureImageMemory,
+			textureImageView,
+			textureSampler,
+			vertices,
+			vertexBuffer,
+			vertexBufferMemory,
+			indices,
+			indexBuffer,
+			indexBufferMemory,
+			objectName
+		);
+
+		m_renderObjects.createRenderInstance(
+			m_device,
+			m_descriptorPool.m_maxFramesInFlight,
+			referenceIndex,
+			m_descriptorPool
+		);
+
+	} // tempCreateObjects()
 
 	void mainLoop()
 	{
@@ -561,14 +610,14 @@ private:
 
 	} // drawFrame()
 
-	void loadModel(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
+	void loadModel(std::string modelPath, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
 	{
 		tinyobj::attrib_t attrib;
 		std::vector<tinyobj::shape_t> shapes;
 		std::vector<tinyobj::material_t> materials;
 		std::string warn, err;
 
-		if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, TempMagicValues::MODEL_PATH.c_str())) {
+		if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, modelPath.c_str())) {
 			throw std::runtime_error(warn + err); }
 
 		std::unordered_map<Vertex, uint32_t> uniqueVertices{};
