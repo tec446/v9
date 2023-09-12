@@ -1,5 +1,9 @@
 #include "Buffer.h"
 
+#include "Device.h"
+#include "SwapChain.h"
+#include "CommandPool.h"
+
 namespace Buffer
 {
 

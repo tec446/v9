@@ -7,7 +7,10 @@
 #include "Types.h"
 #include "Device.h"
 #include "Buffer.h"
-#include "DescriptorPool.h"
+
+// Forward declarations
+class DescriptorPool;
+class CommandPool;
 
 struct Coordinates3D
 {

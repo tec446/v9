@@ -1,5 +1,6 @@
 #include "CommandPool.h"
 
+#include "RenderObjects.h"
 
 void CommandPool::createCommandPool(Device& device, VkSurfaceKHR& surface)
 {

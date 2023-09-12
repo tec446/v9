@@ -26,7 +26,7 @@ void DescriptorPool::createDescriptorSetLayout(VkDevice& logicalDevice)
 		throw std::runtime_error("failed to create descriptor set layout!"); }
 
 } // createDescriptorSetLayout
-
+/*
 void DescriptorPool::createDescriptorSets(VkDevice& logicalDevice, std::vector<VkBuffer>& uniformBuffers, VkImageView& textureImageView, VkSampler& textureSampler)
 {
 	std::vector<VkDescriptorSetLayout> layouts(m_maxFramesInFlight, m_descriptorSetLayout);
@@ -73,6 +73,7 @@ void DescriptorPool::createDescriptorSets(VkDevice& logicalDevice, std::vector<V
 		vkUpdateDescriptorSets(logicalDevice, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 	}
 } // createDescriptorSets()
+*/
 
 void DescriptorPool::createDescriptorPool(VkDevice& logicalDevice)
 {

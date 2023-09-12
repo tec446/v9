@@ -6,7 +6,9 @@
 #include <stdexcept>
 
 #include "Device.h"
-#include "RenderObjects.h"
+
+// Forward declarations
+class RenderObjects;
 
 class CommandPool
 {

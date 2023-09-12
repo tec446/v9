@@ -2,9 +2,9 @@
 
 #include <vulkan/vulkan.h>
 
-#include "Device.h"
-#include "CommandPool.h"
-#include "SwapChain.h"
+class Device;
+class CommandPool;
+class SwapChain;
 
 namespace Buffer
 {

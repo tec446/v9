@@ -2,6 +2,9 @@
 
 #include <stb_image.h>
 
+#include "DescriptorPool.h"
+#include "CommandPool.h"
+
 int RenderObjects::createRenderObject(
 	VkImage						 textureImage,
 	VkDeviceMemory				 textureImageMemory,
