@@ -1,5 +1,7 @@
 #include "CommandPool.h"
 
+#include <iostream>
+
 #include "RenderObjects.h"
 
 void CommandPool::createCommandPool(Device& device, VkSurfaceKHR& surface)
@@ -85,18 +87,19 @@ void CommandPool::recordCommandBuffer(
 		if (renderObjects.m_instances.referenceIndices.size() > 0) {
 			auto& objects  { renderObjects.m_objects   };
 			auto& instances{ renderObjects.m_instances };
+			auto& objectIndices{objects.objectIndices };
 			auto& referenceIndices{instances.referenceIndices};
 			
 			for (int i = 0; i < referenceIndices.size(); i++) {
 				// vertexBuffer
-				uint16_t vertexIndex{ static_cast<uint16_t>(RenderObjects::Objects::IndexType::vertexBuffer) };
-				VkBuffer& vertexBuffer{ objects.vertexBuffer[referenceIndices[vertexIndex]] };
+				uint16_t vertexBufferIndex{ static_cast<uint16_t>(RenderObjects::Objects::IndexType::vertexBuffer) };
+				VkBuffer& vertexBuffer{ objects.vertexBuffer[objectIndices[referenceIndices[i]][vertexBufferIndex]] };
 				// indexBuffer
-				uint16_t indexIndex{ static_cast<uint16_t>(RenderObjects::Objects::IndexType::indexBuffer) };
-				VkBuffer& indexBuffer{ objects.indexBuffer[referenceIndices[indexIndex]] };
+				uint16_t indexBufferIndex{ static_cast<uint16_t>(RenderObjects::Objects::IndexType::indexBuffer) };
+				VkBuffer& indexBuffer{ objects.indexBuffer[objectIndices[referenceIndices[i]][indexBufferIndex]] };
 				// indices
 				uint16_t indicesIndex{ static_cast<uint16_t>(RenderObjects::Objects::IndexType::indexBuffer) };
-				std::vector<uint32_t>& indices{ objects.indices[referenceIndices[indicesIndex]] };
+				std::vector<uint32_t>& indices{ objects.indices[objectIndices[referenceIndices[i]][indicesIndex]] };
 				// descriptorSets
 				std::vector<VkDescriptorSet>& descriptorSets{ instances.descriptorSets[i] };
 
@@ -104,9 +107,19 @@ void CommandPool::recordCommandBuffer(
 				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, offsets);
 				vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineLayout,
-					0, 1, &descriptorSets[m_currentFrame], 0, nullptr);
+				vkCmdBindDescriptorSets(
+					commandBuffer,
+					VK_PIPELINE_BIND_POINT_GRAPHICS,
+					graphicsPipelineLayout, 
+					0, 
+					1, 
+					&descriptorSets[m_currentFrame],
+					0,
+					nullptr
+				);
+
 				vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+
 			} // for each instance
 		} // if instances to render
 	}

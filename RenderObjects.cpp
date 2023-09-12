@@ -63,9 +63,9 @@ void RenderObjects::createRenderInstance(
 	int referenceIndex,
 	DescriptorPool& descriptorPool
 ) {
-	std::vector<VkBuffer>       uniformBuffers;
-	std::vector<VkDeviceMemory> uniformBuffersMemory;
-	std::vector<void*>		    uniformBuffersMapped;
+	std::vector<VkBuffer>        uniformBuffers;
+	std::vector<VkDeviceMemory>  uniformBuffersMemory;
+	std::vector<void*>		     uniformBuffersMapped;
 	std::vector<VkDescriptorSet> descriptorSets;
 
 	std::vector<uint16_t> referenceIndices = m_objects.objectIndices[referenceIndex];
@@ -87,6 +87,12 @@ void RenderObjects::createRenderInstance(
 		descriptorPool.m_descriptorSetLayout,
 		descriptorPool.m_descriptorPool
 	);
+
+	m_instances.uniformBuffers.push_back(uniformBuffers);
+	m_instances.uniformBuffersMemory.push_back(uniformBuffersMemory);
+	m_instances.uniformBuffersMapped.push_back(uniformBuffersMapped);
+	m_instances.descriptorSets.push_back(descriptorSets);
+	m_instances.referenceIndices.push_back(referenceIndex);
 
 } // createRenderInstance()
 
@@ -473,14 +479,14 @@ void RenderObjects::createIndexBuffer(
 } // createIndexBuffer()
 
 void RenderObjects::createDescriptorSets(
-	VkDevice& logicalDevice,
-	std::vector<VkBuffer>& uniformBuffers,
-	VkImageView& textureImageView,
-	VkSampler& textureSampler,
+	VkDevice&					  logicalDevice,
+	std::vector<VkBuffer>&		  uniformBuffers,
+	VkImageView&				  textureImageView,
+	VkSampler&					  textureSampler,
 	std::vector<VkDescriptorSet>& descriptorSets,
-	uint32_t maxFramesInFlight,
-	VkDescriptorSetLayout& descriptorSetLayout,
-	VkDescriptorPool& descriptorPool
+	uint32_t					  maxFramesInFlight,
+	VkDescriptorSetLayout&		  descriptorSetLayout,
+	VkDescriptorPool&			  descriptorPool
 ) {
 	std::vector<VkDescriptorSetLayout> layouts(maxFramesInFlight, descriptorSetLayout);
 	VkDescriptorSetAllocateInfo allocInfo{};

@@ -62,9 +62,9 @@ public:
 	/// Data relevent to individual instances of an object
 	struct Instances {
 		// holds transform data
-		std::vector<VkBuffer>		uniformBuffers{};
-		std::vector<VkDeviceMemory> uniformBuffersMemory{};
-		std::vector<void*>			uniformBuffersMapped{};
+		std::vector<std::vector<VkBuffer>>	 	 uniformBuffers{};
+		std::vector<std::vector<VkDeviceMemory>> uniformBuffersMemory{};
+		std::vector<std::vector<void*>>		 	 uniformBuffersMapped{};
 
 		// DescriptorSets, 2D vector for multiple frames in flight
 		std::vector<std::vector<VkDescriptorSet>> descriptorSets{};
