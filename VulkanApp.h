@@ -286,7 +286,7 @@ public:
 			vkMapMemory(*device, m_uniformBuffersMemory[i], 0, bufferSize, 0, &m_uniformBuffersMapped[i]);
 		}
 	} // createUniformBuffers()
-
+	/*
 	void createVertexBuffer(
 		Device& device,
 		CommandPool& commandPool
@@ -332,6 +332,7 @@ public:
 		vkDestroyBuffer(*device, stagingBuffer, nullptr);
 		vkFreeMemory(*device, stagingBufferMemory, nullptr);
 	} // createIndexBuffer()
+	*/
 
 	void vkUpdateUniformBuffer(SwapChain& swapChain, uint32_t currentImage) {
 		static auto startTime = std::chrono::high_resolution_clock::now();
@@ -417,7 +418,7 @@ private:
 		m_commandPool.createCommandBuffers(m_device, m_descriptorPool.m_maxFramesInFlight);
 		m_commandPool.createSyncObjects(*m_device, m_descriptorPool.m_maxFramesInFlight);
 	
-		tempCreateObjects();
+		tempCreateObjects("myObject1", TempMagicValues::TEXTURE_PATH, TempMagicValues::MODEL_PATH);
 
 	} // initVulkan()
 
@@ -482,10 +483,11 @@ private:
 	{
 		m_swapChain.cleanupSwapChain(*m_device);
 
-		vkDestroySampler(*m_device, m_textureImage.m_textureSampler, nullptr);
-		vkDestroyImageView(*m_device, m_textureImage.m_textureImageView, nullptr);
-		vkDestroyImage(*m_device, m_textureImage.m_textureImage, nullptr);
-		vkFreeMemory(*m_device, m_textureImage.m_textureImageMemory, nullptr);
+		//TODO: this should be a RenderObjects member
+		//vkDestroySampler(*m_device, m_textureImage.m_textureSampler, nullptr);
+		//vkDestroyImageView(*m_device, m_textureImage.m_textureImageView, nullptr);
+		//vkDestroyImage(*m_device, m_textureImage.m_textureImage, nullptr);
+		//vkFreeMemory(*m_device, m_textureImage.m_textureImageMemory, nullptr);
 
 		for (size_t i = 0; i < m_descriptorPool.m_maxFramesInFlight; i++) {
 			vkDestroyBuffer(*m_device, m_pipeline->m_uniformBuffers[i], nullptr);
@@ -495,11 +497,13 @@ private:
 		vkDestroyDescriptorPool(*m_device, m_descriptorPool.m_descriptorPool, nullptr);
 		vkDestroyDescriptorSetLayout(*m_device, m_descriptorPool.m_descriptorSetLayout, nullptr);
 
-		vkDestroyBuffer(*m_device, m_commandPool.m_indexBuffer, nullptr);
-		vkFreeMemory(*m_device, m_commandPool.m_indexBufferMemory, nullptr);
-
-		vkDestroyBuffer(*m_device, m_commandPool.m_vertexBuffer, nullptr);
-		vkFreeMemory(*m_device, m_commandPool.m_vertexBufferMemory, nullptr);
+		//TODO: this should be a RenderObjects member
+		// 
+		//vkDestroyBuffer(*m_device, m_commandPool.m_indexBuffer, nullptr);
+		//vkFreeMemory(*m_device, m_commandPool.m_indexBufferMemory, nullptr);
+		//
+		//vkDestroyBuffer(*m_device, m_commandPool.m_vertexBuffer, nullptr);
+		//vkFreeMemory(*m_device, m_commandPool.m_vertexBufferMemory, nullptr);
 
 		vkDestroyPipeline(*m_device, m_pipeline->m_pipeline, nullptr);
 		vkDestroyPipelineLayout(*m_device, m_pipeline->m_pipelineLayout, nullptr);
